@@ -77,7 +77,10 @@ void calc_ei(Vertex  &e_i, int i, Vertex &X, Vertex &a, Vertex &b, Vertex &c, Ve
 
 // func for calc A_ij
 void calc_Aij(){
-	cout << endl;
+	double integral1 = k * k * scalar_product(ei,ej) - Di, Dj; // (k^2 * (ei,ej) - Di * Dj) F(x - y)dydt
+	double integral2 = 0;
+	double integral3 = 0;
+	double integral4 = 0;
 }
 
 int main(){
