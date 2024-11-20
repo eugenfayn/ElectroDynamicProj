@@ -39,7 +39,7 @@ void calc_Di(double &D_i, int i, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
 	//c     |	d
 	//|---- b-------|
 	if (cond1){
-		D_i = 2 * calc_S(a,b,c);
+		D_i = - 2 * calc_S(a,b,d);
 	}
 	else if (cond2){
 		D_i = 2 * calc_S(a,b,c);
@@ -49,8 +49,24 @@ void calc_Di(double &D_i, int i, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
 	}
 }
 
+// func for calc e_i
+void calc_ei(double &e_i, int i, Vertex &x, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
+	bool cond1 = false;
+	bool cond2 = false;
+	if (cond1){
+		e_i = (d - x) / calc_S(a,b,d);
+	}
+	else if (cond2){
+		e_i = (x - c) / calc_S(a,b,c);
+	}
+	else{
+		e_i = 0;
+	}	
+
+}
+
 // func for calc A_ij
-void Aij_func(){
+void calc_Aij(){
 	cout << endl;
 }
 
