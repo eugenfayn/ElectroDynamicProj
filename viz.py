@@ -1,55 +1,67 @@
 import matplotlib.pyplot as plt
 
-def read_shared_edges(filename):
-    edges = []
-    faces = []
-    vertices = []
+# Данные
+edge = [822, 441]
+faces = [
+    [441, 842, 822],
+    [441, 822, 420]
+]
+vertices = {
+    "441": [-0.070711, 0, -0.1],  # 441
+    "842": [-0.06364, 0.007071, -0.1],  # 842
+    "822": [-0.06364, 0.007071, -0.09],  # 822
+    "420": [-0.070711, 0, -0.09]  # 420
+}
 
-    with open(filename, 'r') as file:
-        lines = file.readlines()
-        i = 0
-        while i < len(lines):
-            if lines[i].startswith("Edge:"):
-                edge = list(map(int, lines[i].split()[1:]))
-                edges.append(edge)
-                i += 1
-                while i < len(lines) and not lines[i].startswith("Edge:"):
-                    if lines[i].startswith("Face"):
-                        face = list(map(int, lines[i].split()[2:]))
-                        faces.append(face)
-                        i += 1
-                        vertex_coords = []
-                        while i < len(lines) and not lines[i].startswith("Face") and not lines[i].startswith("Edge:"):
-                            vertex = list(map(float, lines[i].split()))
-                            vertex_coords.append(vertex)
-                            i += 1
-                        vertices.append(vertex_coords)
-            else:
-                i += 1
-    return edges, faces, vertices
+# Функция для получения координат вершин по индексам
+def get_vertex_coords(vertex_indices):
+    return [vertices[str(i)] for i in vertex_indices]
 
-def plot_edges_and_faces(edges, faces, vertices):
-    fig, ax = plt.subplots()
-    for i in range(0):
-        edge = edges[i]
-        face1 = faces[2 * i]
-        face2 = faces[2 * i + 1]
-        vertex_coords1 = vertices[2 * i]
-        vertex_coords2 = vertices[2 * i + 1]
+# Получение координат вершин для каждого треугольника
+face1_coords = get_vertex_coords(faces[0])
+face2_coords = get_vertex_coords(faces[1])
 
-        # Plot the shared edge
-        ax.plot([vertex_coords1[0][0], vertex_coords1[1][0]], [vertex_coords1[0][1], vertex_coords1[1][1]], 'r-')
+# Преобразование координат в формат, пригодный для matplotlib
+face1_x = [v[0] for v in face1_coords]
+face1_y = [v[1] for v in face1_coords]
+face1_z = [v[2] for v in face1_coords]
 
-        # Plot the first face
-        ax.plot([vertex_coords1[0][0], vertex_coords1[2][0]], [vertex_coords1[0][1], vertex_coords1[2][1]], 'b-')
-        ax.plot([vertex_coords1[1][0], vertex_coords1[2][0]], [vertex_coords1[1][1], vertex_coords1[2][1]], 'b-')
+face2_x = [v[0] for v in face2_coords]
+face2_y = [v[1] for v in face2_coords]
+face2_z = [v[2] for v in face2_coords]
 
-        # Plot the second face
-        ax.plot([vertex_coords2[0][0], vertex_coords2[2][0]], [vertex_coords2[0][1], vertex_coords2[2][1]], 'g-')
-        ax.plot([vertex_coords2[1][0], vertex_coords2[2][0]], [vertex_coords2[1][1], vertex_coords2[2][1]], 'g-')
+# Получение координат общего ребра
+edge_coords = get_vertex_coords(edge)
+edge_x = [v[0] for v in edge_coords]
+edge_y = [v[1] for v in edge_coords]
+edge_z = [v[2] for v in edge_coords]
 
-    ax.set_aspect('equal')
-    plt.show()
+# Создание фигуры и осей
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
 
-edges, faces, vertices = read_shared_edges('shared_edges.txt')
-plot_edges_and_faces(edges, faces, vertices)
+# Рисование треугольников
+ax.plot_trisurf(face1_x, face1_y, face1_z, triangles=[[0, 1, 2]], color='r', alpha=0.5)
+ax.plot_trisurf(face2_x, face2_y, face2_z, triangles=[[0, 1, 2]], color='b', alpha=0.5)
+
+# Рисование общего ребра
+ax.plot(edge_x, edge_y, edge_z, color='g', linewidth=2)
+handles = []
+legend_labels = []
+# Отображение всех точек и подпись их координат
+for vertex, index in zip(vertices.values(), vertices.keys()):
+    scatter = ax.scatter(vertex[0], vertex[1], vertex[2], color='k', s=50)
+    ax.text(vertex[0], vertex[1], vertex[2]+0.001, f"({index})", fontsize=11, color='r')
+    handles.append(scatter)
+    legend_labels.append(f"{index}: {vertex[0]}, {vertex[1]}, {vertex[2]}")
+     
+# Добавление легенды
+ax.legend(handles, legend_labels, title="Vertex Indices and Coordinates")
+
+# Настройка осей
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+# Отображение графика
+plt.show()

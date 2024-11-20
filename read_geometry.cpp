@@ -1,4 +1,7 @@
+#include <iomanip>
 #include <iostream>
+#include <limits>
+#include <numbers>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -123,6 +126,8 @@ std::unordered_map<Edge, std::vector<int>, EdgeHash> findEdges(const std::vector
 }
 
 void writeSharedEdgesToFile(const std::string& filename, const std::vector<Vertex>& vertices, const std::vector<Face>& faces, const std::unordered_map<Edge, std::vector<int>, EdgeHash>& edgeMap) {
+    constexpr auto max_precision{std::numeric_limits<long double>::digits10 + 1};
+    
     std::ofstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Unable to open file: " << filename << std::endl;
@@ -141,7 +146,7 @@ void writeSharedEdgesToFile(const std::string& filename, const std::vector<Verte
                 file << "Vertices:\n";
                 for (int vertexIndex : {face.v1, face.v2, face.v3}) {
                     const Vertex& vertex = vertices[vertexIndex];
-                    file << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+                    file << std::setprecision(max_precision) << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
                 }
             }
             file << "\n";
@@ -155,7 +160,7 @@ int main() {
     std::vector<Vertex> vertices;
     std::vector<Face> faces;
 
-    readObjFile("ElectroDynamicProj/angle_20x20.obj", vertices, faces);
+    readObjFile("angle_20x20.obj", vertices, faces);
 
     std::unordered_map<Edge, std::vector<int>, EdgeHash> edgeMap = findEdges(faces);
 
