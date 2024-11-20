@@ -22,6 +22,11 @@ extern "C"
 	extern void zgesv_(int *N, int *Nrhs, complex<double> *A, int *ldA ,     int *Ipvt, complex<double> *B, int *ldB, int *info);
 };
 
+double scalar_product(Vertex &a, Vertex &b){
+	double sum_ = a.x * b.x + a.y * b.y + a.z * b.z;
+	return sum_
+}
+
 // Calculation S by 3 points
 double calc_S(Vertex a,Vertex b,Vertex c){
 	double S = 0.0;
@@ -50,19 +55,24 @@ void calc_Di(double &D_i, int i, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
 }
 
 // func for calc e_i
-void calc_ei(double &e_i, int i, Vertex &x, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
+void calc_ei(Vertex  &e_i, int i, Vertex &X, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
 	bool cond1 = false;
 	bool cond2 = false;
 	if (cond1){
-		e_i = (d - x) / calc_S(a,b,d);
+		e_i.x  = (d.x - X.x) / calc_S(a,b,d);
+		e_i.y  = (d.y - X.y) / calc_S(a,b,d);
+		e_i.z  = (d.z - X.z) / calc_S(a,b,d);
 	}
 	else if (cond2){
-		e_i = (x - c) / calc_S(a,b,c);
+		e_i.x = (X.x - c.x) / calc_S(a,b,c);
+		e_i = (X.y - c.y) / calc_S(a,b,c);
+		e_i = (X.z - c.z) / calc_S(a,b,c);
 	}
 	else{
-		e_i = 0;
+		e_i.x = 0;
+		e_i.y = 0;
+		e_i.z = 0;
 	}	
-
 }
 
 // func for calc A_ij
