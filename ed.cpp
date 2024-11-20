@@ -24,7 +24,7 @@ extern "C"
 
 double scalar_product(Vertex &a, Vertex &b){
 	double sum_ = a.x * b.x + a.y * b.y + a.z * b.z;
-	return sum_
+	return sum_;
 }
 
 // Calculation S by 3 points
@@ -65,8 +65,8 @@ void calc_ei(Vertex  &e_i, int i, Vertex &X, Vertex &a, Vertex &b, Vertex &c, Ve
 	}
 	else if (cond2){
 		e_i.x = (X.x - c.x) / calc_S(a,b,c);
-		e_i = (X.y - c.y) / calc_S(a,b,c);
-		e_i = (X.z - c.z) / calc_S(a,b,c);
+		e_i.y = (X.y - c.y) / calc_S(a,b,c);
+		e_i.z = (X.z - c.z) / calc_S(a,b,c);
 	}
 	else{
 		e_i.x = 0;
@@ -77,7 +77,7 @@ void calc_ei(Vertex  &e_i, int i, Vertex &X, Vertex &a, Vertex &b, Vertex &c, Ve
 
 // func for calc A_ij
 void calc_Aij(){
-	double integral1 = k * k * scalar_product(ei,ej) - Di, Dj; // (k^2 * (ei,ej) - Di * Dj) F(x - y)dydt
+	//double integral1 = k * k * scalar_product(ei,ej) - Di, Dj; // (k^2 * (ei,ej) - Di * Dj) F(x - y)dydt
 	double integral2 = 0;
 	double integral3 = 0;
 	double integral4 = 0;
@@ -85,7 +85,8 @@ void calc_Aij(){
 
 int main(){
 	cout << "Geometry" << endl;
-	double d = 0.0;
-	calc_Di(d,3);
+	double e = 0.0;
+	Vertex a,b,c,d;
+	calc_Di(e,3,a,b,c,d);
 	return 0;
 }
