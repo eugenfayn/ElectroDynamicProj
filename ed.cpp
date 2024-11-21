@@ -9,6 +9,7 @@ using namespace std;
 // Решение системы
 // Постобработка
 
+// Vertex Class
 class Vertex {
 private:
 	double x,y,z;
@@ -45,6 +46,12 @@ public:
 	}
 };
 
+struct Quadrature3Gauss{
+	// alpha beta gamma
+	double g = 0;
+};
+
+
 struct Face {
     int v1, v2, v3;
 };
@@ -53,6 +60,11 @@ extern "C"
 {
 	extern void zgesv_(int *N, int *Nrhs, complex<double> *A, int *ldA ,     int *Ipvt, complex<double> *B, int *ldB, int *info);
 };
+
+// Quadrature Simpson
+//double SimpsonQuadrature(double a, double b,
+
+
 
 // func for D_i
 void calc_Di(double &D_i, int i, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
