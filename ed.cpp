@@ -9,8 +9,40 @@ using namespace std;
 // Решение системы
 // Постобработка
 
-struct Vertex {
-    double x, y, z;
+class Vertex {
+private:
+	double x,y,z;
+public:
+	Vertex(){
+		x = 0.0;
+		y = 0.0;
+		z = 0.0;
+	}
+	Vertex(double a, double b, double c){
+		x = a;
+		y = b;
+		z = c;
+	}
+	Vertex operator+(const Vertex& right) const{
+       		return Vertex(x+right.x,y+right.y,z+right.z);
+	}
+	Vertex operator-(const Vertex& right) const{
+		return Vertex(x-right.x,y-right.y,z-right.z);
+	}
+	Vertex operator/(double scalar) const{
+		return Vertex(x/scalar,y/scalar,z/scalar);
+	}
+	double scalart_product(const Vertex& right){
+		double sum_ = x * right.x + y * right.y + z * right.z;
+ 		return sum_;
+	}
+	double calc_S(const Vertex& b, const Vertex& c){
+		double S = 0.0;
+ 		S = S + (b.x - x) * (c.y - y);
+ 		S = S - (c.x - x) * (b.y - y);
+ 		S = 0.5 * S;
+ 		return S;
+	}
 };
 
 struct Face {
@@ -22,20 +54,6 @@ extern "C"
 	extern void zgesv_(int *N, int *Nrhs, complex<double> *A, int *ldA ,     int *Ipvt, complex<double> *B, int *ldB, int *info);
 };
 
-double scalar_product(Vertex &a, Vertex &b){
-	double sum_ = a.x * b.x + a.y * b.y + a.z * b.z;
-	return sum_;
-}
-
-// Calculation S by 3 points
-double calc_S(Vertex a,Vertex b,Vertex c){
-	double S = 0.0;
-	S = S + (b.x - a.x) * (c.y - a.y);
-	S = S - (c.x - a.x) * (b.y - a.y);
-	S = 0.5 * S;
-	return S;
-}	
-
 // func for D_i
 void calc_Di(double &D_i, int i, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
 	bool cond1 = false;
@@ -44,10 +62,10 @@ void calc_Di(double &D_i, int i, Vertex &a, Vertex &b, Vertex &c, Vertex &d){
 	//c     |	d
 	//|---- b-------|
 	if (cond1){
-		D_i = - 2 * calc_S(a,b,d);
+		D_i = - 2 * a.calc_S(b,d);
 	}
 	else if (cond2){
-		D_i = 2 * calc_S(a,b,c);
+		D_i = 2 * a.calc_S(b,c);
 	}
 	else {
 		D_i = 0;
@@ -59,19 +77,15 @@ void calc_ei(Vertex  &e_i, int i, Vertex &X, Vertex &a, Vertex &b, Vertex &c, Ve
 	bool cond1 = false;
 	bool cond2 = false;
 	if (cond1){
-		e_i.x  = (d.x - X.x) / calc_S(a,b,d);
-		e_i.y  = (d.y - X.y) / calc_S(a,b,d);
-		e_i.z  = (d.z - X.z) / calc_S(a,b,d);
+		e_i = d - X;
+		e_i = e_i/a.calc_S(b,d);
 	}
 	else if (cond2){
-		e_i.x = (X.x - c.x) / calc_S(a,b,c);
-		e_i.y = (X.y - c.y) / calc_S(a,b,c);
-		e_i.z = (X.z - c.z) / calc_S(a,b,c);
+		e_i = X - c;
+		e_i = e_i/a.calc_S(b,c);
 	}
 	else{
-		e_i.x = 0;
-		e_i.y = 0;
-		e_i.z = 0;
+		e_i = Vertex();
 	}	
 }
 
@@ -85,8 +99,11 @@ void calc_Aij(){
 
 int main(){
 	cout << "Geometry" << endl;
-	double e = 0.0;
-	Vertex a,b,c,d;
-	calc_Di(e,3,a,b,c,d);
+	Vertex a(0.1,0.1,0.1);
+	Vertex b(0.2,0.3,0.5);
+	Vertex c(0.0,0.7,0.9);
+	double SSS = 0.0;
+	SSS = a.calc_S(b,c);
+	cout << "SSS: " << SSS << endl;
 	return 0;
 }
