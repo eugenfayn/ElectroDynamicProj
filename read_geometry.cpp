@@ -9,16 +9,46 @@
 #include <unordered_map>
 #include <set>
 
-struct Vertex {
+class Vertex {
+public:
     double x, y, z;
+
+    Vertex() : x(0), y(0), z(0) {}
+    Vertex(double x, double y, double z) : x(x), y(y), z(z) {}
+
+    bool operator==(const Vertex& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
+    bool operator<(const Vertex& other) const {
+        if (x == other.x) {
+            if (y == other.y) {
+                return z < other.z;
+            }
+            return y < other.y;
+        }
+        return x < other.x;
+    }
 };
 
-struct Face {
+class Face {
+public:
     int v1, v2, v3;
+
+    Face() : v1(0), v2(0), v3(0) {}
+    Face(int v1, int v2, int v3) : v1(v1), v2(v2), v3(v3) {}
+
+    bool operator==(const Face& other) const {
+        return v1 == other.v1 && v2 == other.v2 && v3 == other.v3;
+    }
 };
 
-struct Edge {
+class Edge {
+public:
     int v1, v2;
+
+    Edge() : v1(0), v2(0) {}
+    Edge(int v1, int v2) : v1(v1), v2(v2) {}
 
     bool operator<(const Edge& other) const {
         if (v1 == other.v1) return v2 < other.v2;
