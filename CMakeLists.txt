@@ -14,6 +14,9 @@ option(OPTIMIZE_O1 "Basic optimizations (-O1)" OFF)
 option(OPTIMIZE_O2 "Medium optimizations (-O2)" OFF)
 option(OPTIMIZE_O3 "Heavy optimizations (-O3)" OFF)
 
+find_package(LAPACK REQUIRED)
+find_package(BLAS REQUIRED)
+
 # Set optimization flags based on options
 if(OPTIMIZE_O0)
     add_compile_options(-O0)
@@ -71,9 +74,12 @@ add_executable(integral_solver
     src/main.cpp
 )
 
-# Link the executable with the geometry library
+# Link the executable with the libraries
 target_link_libraries(integral_solver
-    PRIVATE geometry
+    PRIVATE 
+        geometry
+        ${BLAS_LIBRARIES}
+        ${LAPACK_LIBRARIES}
 )
 
 # Find Python (optional, if you need to call Python from C++)
@@ -89,4 +95,6 @@ add_custom_target(python_deps
 message(STATUS "")
 message(STATUS "Build configuration:")
 message(STATUS "  Optimization level: -${OPTIMIZATION_LEVEL}")
+message(STATUS "  BLAS libraries: ${BLAS_LIBRARIES}")
+message(STATUS "  LAPACK libraries: ${LAPACK_LIBRARIES}")
 message(STATUS "")
