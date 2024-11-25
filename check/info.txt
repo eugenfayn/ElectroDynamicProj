@@ -1,9 +1,0 @@
-Cylinder
-w = 2 * pi * 2 GHz 
-v = [-1, 0, 0]
-p = [0, 1, 0]
-
-Angle 
-w = 2 * pi * 3 GHz 
-v = [-1, 0, 0]
-p =[0, 0, 1]
