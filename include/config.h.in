@@ -1,0 +1,12 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+// Project paths
+#define PROJECT_ROOT_DIR "@PROJECT_ROOT_DIR@"
+#define PROJECT_DATA_DIR "@PROJECT_DATA_DIR@"
+#define PROJECT_INPUT_DIR "@PROJECT_INPUT_DIR@"
+#define PROJECT_OUTPUT_DIR "@PROJECT_OUTPUT_DIR@"
+
+// Optimization information
+#define OPTIMIZATION_LEVEL "@OPTIMIZATION_LEVEL@"
+
+#endif // CONFIG_H
