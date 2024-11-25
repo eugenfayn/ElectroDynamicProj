@@ -70,3 +70,66 @@ int main() {
 
     return 0;
 }
+
+// points - локальные
+
+// m - число точек квадратуры
+// z1, ..., zm - точки квадратуры
+// w1, ..., wm - веса точек квадратуры
+
+// alpha, beta, gamma
+// [alpha1, beta1, gamma1
+// alpha2, beta2, gamma2
+// ...
+// alpha_m, beta_m, gamma_m
+// ]
+// +
+// [xa, ya, za
+// xb, yb, zb
+// xc, yc, zc
+// ] = [xO, yO, zO] - барицентрические координаты?
+
+// Mu from ABC
+// alpha*A+beta*B+gamma*C = Mu
+// alpha + beta + gamma = 1
+// 0 <= alpha, beta, gamma <= 1
+// gamma = 1 - alpha - beta
+
+// quadrature
+// m - число точек
+// alpha[m]
+// beta[m]
+// gamma[m]
+// w[m] - вес
+
+// for (int i=0; i<m;++i){
+//     local_point = [alpha[i], beta[i], gamma[i]]*[A,B,C].Transpose
+//     integral += func(local_point, data) * w[i]
+// }
+// integral *= area(ABC)
+
+// // Интегрирование
+// integrator(func /*for integration*/, points /*set of numbers*/, weights, data) {
+//     double result = 0;
+//     for (int i=0; i<size(weights);i++){
+//         loc_pt = get_pt(cell, points[i]);
+//         result += func(loc_pt, data).weights[i];
+//     }
+//     result *= area(cell);
+// }
+
+// можно прогуглить список квадратурных формул (двумерный интеграл треугольный мастер элемент, нужно две квадратуры забить (3 и 4), которые мы будем выбирать в зависимости от (сделать тип данных квадратура))
+
+// Пример
+// m = 3
+// alpha beta gamma
+// [1/6  1/6  2/3 = 1
+//  1/6  2/3  1/6 = 1
+//  2/3  1/6  1/6]= 1
+
+//  w
+//  [1/3
+//   1/3
+//   1/3]
+//    =
+//    1

@@ -1,4 +1,14 @@
+#!/usr/bin/env python3
 import matplotlib.pyplot as plt
+import os
+import sys
+
+# Add path handling to work with data directory
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+OUTPUT_DIR = os.path.join(DATA_DIR, 'output')
+
+# Create directories if they don't exist
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Данные
 edge = [822, 441]
