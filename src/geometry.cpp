@@ -237,7 +237,7 @@ void writeGeometryAndQuadratureToFile(
     file << "QuadraturePoints\n";
     file << quadPoints.size() << "\n";
     for (const auto& p : quadPoints) {
-        file << p.xi1 << " " << p.xi2 << " " << p.xi3 << " " << p.weight << "\n";
+        file << p.xi << " " << p.eta << " " << p.weight << "\n";
     }
     
     file.close();

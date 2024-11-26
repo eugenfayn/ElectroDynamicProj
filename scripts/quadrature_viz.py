@@ -4,6 +4,13 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import os
 
+def barycentric_to_cartesian(point, triangle_vertices):
+    """Convert reference coordinates (ξ,η) to cartesian"""
+    print(point)
+    xi, eta = point
+    v1, v2, v3 = triangle_vertices
+    return v1 + (v2 - v1) * xi + (v3 - v1) * eta
+
 def read_mesh_data(filename):
     data = {}
     
@@ -30,8 +37,8 @@ def read_mesh_data(filename):
         quad_points = []
         quad_weights = []
         for _ in range(n_quad):
-            xi1, xi2, xi3, w = map(float, f.readline().split())
-            quad_points.append([xi1, xi2, xi3])
+            xi, eta, w = map(float, f.readline().split())
+            quad_points.append([xi, eta])
             quad_weights.append(w)
     
     return {
@@ -41,15 +48,10 @@ def read_mesh_data(filename):
         'quad_weights': np.array(quad_weights)
     }
 
-def barycentric_to_cartesian(bary_coords, triangle_vertices):
-    """Convert barycentric coordinates to cartesian for a specific triangle"""
-    result = np.zeros(3)
-    for i in range(3):
-        result += bary_coords[i] * triangle_vertices[i]
-    return result
+
 
 # Read the mesh data
-data = read_mesh_data('mesh_data.txt')
+data = read_mesh_data('data/output/mesh_data.txt')
 vertices = data['vertices']
 faces = data['faces']
 quad_points = data['quad_points']

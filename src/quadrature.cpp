@@ -2,32 +2,18 @@
 #include "quadrature/quadrature.h"
 #include "math.h"
 
-BarycentricCoord Quadrature::cartesianToBarycentric(
-    const Vertex& point, 
-    const Vertex& v1, 
-    const Vertex& v2, 
-    const Vertex& v3
-) {
-    double totalArea = v1.calc_S(v2, v3) * 2.0;
-    
-    BarycentricCoord result;
-    result.xi1 = point.calc_S(v2, v3) * 2.0 / totalArea;
-    result.xi2 = v1.calc_S(point, v3) * 2.0 / totalArea;
-    result.xi3 = v1.calc_S(v2, point) * 2.0 / totalArea;
-    
-    return result;
-}
 
+// quadrature.cpp
 std::vector<QuadraturePoint> Quadrature::getGauss3Points() {
     std::vector<QuadraturePoint> points(3);
     
     const double a = 1.0/6.0;
     const double b = 2.0/3.0;
-    const double w = 1.0/3.0;
+    const double w = 1.0/3.0;  // 1/6 * 2
     
-    points[0] = {b, a, a, w};
-    points[1] = {a, b, a, w};
-    points[2] = {a, a, b, w};
+    points[0] = {a, a, w};     // (1/6, 1/6)
+    points[1] = {b, a, w};     // (2/3, 1/6)
+    points[2] = {a, b, w};     // (1/6, 2/3)
     
     return points;
 }
@@ -35,25 +21,32 @@ std::vector<QuadraturePoint> Quadrature::getGauss3Points() {
 std::vector<QuadraturePoint> Quadrature::getGauss4Points() {
     std::vector<QuadraturePoint> points(4);
     
-    const double a = 0.585410196624969;
-    const double b = 0.138196601125011;
-    const double w = 0.25;
+    const double a = 1.0/3.0;
+    const double b = 3.0/5.0;
+    const double c = 1.0/5.0;
+    const double w = 25.0/48.0;
+    const double w2 = -9.0/16.0;
     
-    points[0] = {a, b, b, w};
-    points[1] = {b, a, b, w};
-    points[2] = {b, b, a, w};
-    points[3] = {1.0/3.0, 1.0/3.0, 1.0/3.0, w};
+    points[0] = {a, a, w2};    // center point
+    points[1] = {b, c, w};     // outer points
+    points[2] = {c, b, w};
+    points[3] = {c, c, w};
     
     return points;
 }
 
-Vertex Quadrature::barycentricToCartesian(
-    const QuadraturePoint& bary,
+Vertex Quadrature::referenceToCartesian(
+    const QuadraturePoint& point,
     const Vertex& v1,
     const Vertex& v2,
     const Vertex& v3
 ) {
-    return v1 * bary.xi1 + v2 * bary.xi2 + v3 * bary.xi3;
+    // Transform from reference coordinates (ξ,η) to physical coordinates
+    // x = x1 + (x2-x1)ξ + (x3-x1)η
+    // y = y1 + (y2-y1)ξ + (y3-y1)η
+    // z = z1 + (z2-z1)ξ + (z3-z1)η
+    
+    return v1 + (v2 - v1) * point.xi + (v3 - v1) * point.eta;
 }
 
 double Quadrature::integrateOverFace(
@@ -79,8 +72,7 @@ double Quadrature::integrateOverFace(
     double result = 0.0;
     
     for (const auto& point : quadPoints) {
-        // Use the function instead of inline calculation
-        Vertex cartesianPoint = barycentricToCartesian(point, v1, v2, v3);
+        Vertex cartesianPoint = referenceToCartesian(point, v1, v2, v3);
         result += func(cartesianPoint) * point.weight;
     }
     

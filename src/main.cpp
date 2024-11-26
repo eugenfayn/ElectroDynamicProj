@@ -68,18 +68,12 @@ int main() {
         // Print quadrature points to verify
         std::cout << "\nQuadrature points:" << std::endl;
         for (const auto& p : quadPoints) {
-            std::cout << "Point: (" << p.xi1 << ", " << p.xi2 << ", " << p.xi3 
+            std::cout << "Point: (" << p.xi << ", " << p.eta 
                     << "), weight: " << p.weight << std::endl;
         }
         
-        // Define the function to integrate (example: f(x,y) = x*y)
-        auto testFunction = [](const Vertex& v) {
-            if (v.x * v.y == 0) {
-                std::cout << "Warning: x or y is zero" << std::endl;
-                throw std::runtime_error("x or y is zero");
-            }
-            return v.x * v.y;
-        };
+        // Example integration over a face
+        auto testFunction = [](const Vertex& v) { return v.x * v.x + v.y * v.y; };
 
         double totalIntegral = 0.0;
         for (size_t i = 0; i < faces.size(); ++i) {
