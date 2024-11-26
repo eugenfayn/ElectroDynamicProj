@@ -1,4 +1,5 @@
 #include "geometry/geometry.h"
+#include "quadrature/quadrature.h"
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -35,11 +36,15 @@ Vertex Vertex::operator/(double scalar) const {
     return Vertex(x/scalar, y/scalar, z/scalar);
 }
 
+Vertex Vertex::operator*(double scalar) const {
+    return Vertex(x * scalar, y * scalar, z * scalar);
+}
+
 double Vertex::scalar_product(const Vertex& other) {
     return x * other.x + y * other.y + z * other.z;
 }
 
-double Vertex::calc_S(const Vertex& b, const Vertex& c) {
+double Vertex::calc_S(const Vertex& b, const Vertex& c) const{
     double S = 0.0;
     S = S + (b.x - x) * (c.y - y);
     S = S - (c.x - x) * (b.y - y);
@@ -203,5 +208,37 @@ void writeSharedEdgesToFile(const std::string& filename,
         }
     }
 
+    file.close();
+}
+
+void writeGeometryAndQuadratureToFile(
+    const std::string& filename,
+    const std::vector<Vertex>& vertices,
+    const std::vector<Face>& faces,
+    const std::vector<QuadraturePoint>& quadPoints
+) {
+    std::ofstream file(filename);
+    
+    // Write vertices
+    file << "Vertices\n";
+    file << vertices.size() << "\n";
+    for (const auto& v : vertices) {
+        file << v.x << " " << v.y << " " << v.z << "\n";
+    }
+    
+    // Write faces
+    file << "Faces\n";
+    file << faces.size() << "\n";
+    for (const auto& f : faces) {
+        file << f.v1 << " " << f.v2 << " " << f.v3 << "\n";
+    }
+    
+    // Write quadrature points
+    file << "QuadraturePoints\n";
+    file << quadPoints.size() << "\n";
+    for (const auto& p : quadPoints) {
+        file << p.xi1 << " " << p.xi2 << " " << p.xi3 << " " << p.weight << "\n";
+    }
+    
     file.close();
 }

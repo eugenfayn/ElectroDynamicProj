@@ -17,8 +17,9 @@ public:
     Vertex operator+(const Vertex& other) const;
     Vertex operator-(const Vertex& other) const;
     Vertex operator/(double scalar) const;
+    Vertex operator*(double scalar) const;
     double scalar_product(const Vertex& other);
-    double calc_S(const Vertex& b, const Vertex& c);
+    double calc_S(const Vertex& b, const Vertex& c) const;
 };
 
 class Face {
