@@ -69,6 +69,11 @@ add_library(geometry
     src/geometry.cpp
 )
 
+# Create library from quadrature sources
+add_library(quadrature
+    src/quadrature.cpp
+)
+
 # Create executable
 add_executable(integral_solver
     src/main.cpp
@@ -78,6 +83,7 @@ add_executable(integral_solver
 target_link_libraries(integral_solver
     PRIVATE 
         geometry
+        quadrature
         ${BLAS_LIBRARIES}
         ${LAPACK_LIBRARIES}
 )
