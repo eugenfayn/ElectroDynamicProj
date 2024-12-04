@@ -20,6 +20,7 @@ public:
     Vertex operator*(double scalar) const;
     double scalar_product(const Vertex& other);
     double calc_S(const Vertex& b, const Vertex& c) const;
+    double distance(const Vertex& other) const;
 };
 
 class Triangle {

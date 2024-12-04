@@ -5,6 +5,7 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 // Vertex implementations
 Vertex::Vertex() : x(0.0), y(0.0), z(0.0) {}
@@ -52,8 +53,10 @@ double Vertex::calc_S(const Vertex& b, const Vertex& c) const{
     return S;
 }
 
-double Vertex::ABS(const Vertex& b) const{
-    double abs_ = 0.0
+double Vertex::distance(const Vertex& other) const{
+    double abs = 0.0;
+    abs += sqrt( (other.x - x) * (other.x - x) + (other.y - y) * (other.y - y) + (other.z - z) * (other.z - z));
+    return abs;
 }
 
 

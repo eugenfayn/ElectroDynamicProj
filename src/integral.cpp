@@ -4,11 +4,14 @@
 #include "quadrature/quadrature.h"
 
 // Добавить волновое число правильное
-std::complex<double> calcF(std::complex<double> Xk, std::complex<double> Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
+std::complex<double> calcF(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
     std::complex<double> RES(0.0, 0.0);
     double R = abs(Xk - Ym);
+    Vertex Point1 = Cx - Xk; // Xk в квадратуре
+    Vertex Point2 = Cy - Ym; // Ym в квадратуре
+    double scalar = Point1.scalar_product(Point2);
     std::complex<double> POW(0.0, wavenumber * R);
-    RES = -4 + wavenumber * wavenumber * (Cx - Xk) * (Cy - Ym) * exp(POW)/R;
+    RES = -4 + wavenumber * wavenumber * scalar * exp(POW)/R;
     return RES;
 }
 
