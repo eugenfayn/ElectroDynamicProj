@@ -7,9 +7,26 @@
 #include <lapack.h>
 #include <random>
 #include <unistd.h>
+#include <filesystem>
 
 
 using namespace std;
+
+namespace fs = std::filesystem;
+
+namespace {
+    double WAVENUMBER;
+
+    void initializeGeometryType(const fs::path& inputFile) {
+        std::string filename = inputFile.filename().string();
+        if (filename.find("angle") != std::string::npos) {
+            WAVENUMBER = 41.88790205;
+        } else {
+            WAVENUMBER = 62.83185307;
+        }
+        std::cout << "WAVENUMBER: " << WAVENUMBER << std::endl;
+    }
+}
 
 // Generate random float number
 double randomFloat() {
@@ -20,7 +37,7 @@ double randomFloat() {
 }
 
 // Добавить волновое число правильное
-std::complex<double> calcF_Aij(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
+std::complex<double> calcF_Aij(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=WAVENUMBER){
     std::complex<double> RES(0.0, 0.0);
     double R = Xk.distance(Ym);
 
@@ -95,7 +112,7 @@ void BuildMatrix(std::complex<double>** &A, const int N, const Triangle* &triang
 // polarization - вектор поляризации, пока заговнокодим его координаты в Vertex
 // tension- вектор напряжения, также
 // wavenumber - волновое число
-void BuildRightPart(std::complex<double>* &f, const int N, const Triangle* &triangles, const Vertex polarization, const Vertex tension, double wavenumber=1){
+void BuildRightPart(std::complex<double>* &f, const int N, const Triangle* &triangles, const Vertex polarization, const Vertex tension, double wavenumber=WAVENUMBER){
     double wK[4]{-9./16, 25./48, 25./48, 25./48};
     // double wM[3]{1./3, 1./3, 1./3};
     double ksi4[4]{1./3, 3./5, 1./5, 1./5};
@@ -208,4 +225,29 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
         norm_b += std::abs(b_copy[i]);
     }
     std::cout << "Relative error (rhs-b error divided by abs sum of b): " << relative_error/norm_b << std::endl;
+}
+
+// tau - единичный вектор, координаты храним в Vertex
+// g - вектр b из SolveSLE  
+// N - размер вектора
+// triangles - массив треугольников
+double calcEPR(Vertex tau, /*std::complex<double>* &g,*/ const int N, const Triangle* &triangles,  double wavenumber=WAVENUMBER){
+    double wK[4]{-9./16, 25./48, 25./48, 25./48};
+    double ksi4[4]{1./3, 3./5, 1./5, 1./5};
+    double eta4[4]{1./3, 1./5, 3./5, 1./5};
+    double sum_ = 0;
+    for (int i=0; i < 2*N; i++){
+        for (int m=0; m < 4 ; m++){
+                Vertex Gm(1.0, 1.0, 1.0, -1);//я хз как его считать
+                Triangle currentTriangle = triangles[i];
+                Vertex Xm = currentTriangle.getA() * ksi4[m]+ currentTriangle.getB() *  eta4[m] +  currentTriangle.getC() * (1 - ksi4[m] - eta4[m]) ; 
+                double Si = currentTriangle.calc_S();
+                double tauProductX = Xm.scalar_product(tau);
+                double POW = -wavenumber*tauProductX;
+                std::complex<double> exp_(cos(POW), sin(POW));
+                Vertex V =  (exp_ * wavenumber * wavenumber * (Gm - tau*Gm.scalar_product(tau)) * wK[m] * Si);
+                sum_ += 4*M_PI *(V.x*V.x + V.y*V.y + V.z*V.z);
+        }
+    }
+    return sum_;
 }

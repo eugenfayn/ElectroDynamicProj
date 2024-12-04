@@ -43,6 +43,15 @@ Vertex Vertex::operator*(double scalar) const {
     return Vertex(x * scalar, y * scalar, z * scalar, index);
 }
 
+Vertex Vertex::operator*(const std::complex<double>& scalar) const {
+    // Multiply real components only, ignoring imaginary part
+    return Vertex(x * scalar.real(), y * scalar.real(), z * scalar.real(), index);
+}
+
+Vertex operator*(const std::complex<double>& scalar, const Vertex& vertex) {
+    return vertex * scalar;
+}
+
 Vertex::Vertex(const Vertex& other)
     : x(other.x), y(other.y), z(other.z), index(other.index) {}
 
@@ -113,6 +122,59 @@ Triangle::Triangle(const Vertex& a_, const Vertex& b_, const Vertex& c_)
 double Triangle::calc_S() const {
     // Using the existing calc_S method from Vertex class
     return a.calc_S(b, c);
+}
+
+std::vector<MeshAnalyzer::Edge> MeshAnalyzer::getTriangleEdges(const Triangle& triangle) {
+    std::vector<int> vertices = triangle.getVertexIndices();
+    return {
+        Edge(vertices[0], vertices[1]),
+        Edge(vertices[1], vertices[2]),
+        Edge(vertices[2], vertices[0])
+    };
+}
+
+std::map<int, std::vector<int>> MeshAnalyzer::findNeighboringTriangles(const Triangle* triangles, const int N) {
+    std::map<int, std::vector<int>> neighbors;
+    std::map<Edge, int> edgeToTriangle;
+    
+    // Initialize neighbors map
+    for (int i = 0; i < N; i++) {
+        neighbors[i] = std::vector<int>();
+    }
+    
+    // Process each triangle
+    for (int i = 0; i < N; i++) {
+        const auto& triangle = triangles[i];
+        auto edges = getTriangleEdges(triangle);
+        
+        // Check each edge
+        for (const auto& edge : edges) {
+            auto it = edgeToTriangle.find(edge);
+            if (it != edgeToTriangle.end()) {
+                // Edge is shared with another triangle
+                int otherTriangle = it->second;
+                neighbors[i].push_back(otherTriangle);
+                neighbors[otherTriangle].push_back(i);
+            } else {
+                edgeToTriangle[edge] = i;
+            }
+        }
+    }
+    
+    return neighbors;
+}
+
+void analyzeTriangleMesh(const Triangle* triangles, const int N) {
+    auto neighborMap = MeshAnalyzer::findNeighboringTriangles(triangles, N);
+    
+    // Print or use the results
+    for (const auto& [triangleIdx, neighborList] : neighborMap) {
+        std::cout << "Triangle " << triangleIdx << " neighbors: ";
+        for (int neighbor : neighborList) {
+            std::cout << neighbor << " ";
+        }
+        std::cout << std::endl;
+    }
 }
 
 std::vector<Triangle> parseSharedEdges(const std::string& filename) {
@@ -276,22 +338,24 @@ void printGeometryInfo(const std::vector<Vertex>& vertices,
     std::cout << "Edges that belong to exactly two faces and their corresponding faces:" << std::endl;
     size_t count = 0;
     int sharedEdgeCount = 0;
+    int edgesCount = 0;
     for (const auto& [edge, faceIndices] : edgeMap) {
-        if (count >= 5) break;
+        edgesCount++;
         if (faceIndices.size() == 2) {
             sharedEdgeCount++;
-            std::cout << "Edge: " << edge.v1 + 1 << " " << edge.v2 + 1 
-                     << " belongs to faces: ";
-            for (int faceIndex : faceIndices) {
-                const Face& face = faces[faceIndex];
-                std::cout << "Face " << faceIndex + 1 << ": " 
-                         << face.v1 + 1 << " " << face.v2 + 1 << " " 
-                         << face.v3 + 1 << "; ";
-            }
-            std::cout << std::endl;
+            //std::cout << "Edge: " << edge.v1 + 1 << " " << edge.v2 + 1 
+            //         << " belongs to faces: ";
+            //for (int faceIndex : faceIndices) {
+                //const Face& face = faces[faceIndex];
+            //    std::cout << "Face " << faceIndex + 1 << ": " 
+            //             << face.v1 + 1 << " " << face.v2 + 1 << " " 
+            //             << face.v3 + 1 << "; ";
+            //}
+            //std::cout << std::endl;
             ++count;
         }
     }
+    std::cout << "Edges size " << sharedEdgeCount << std::endl;
     std::cout << "Shared edges size " << sharedEdgeCount << std::endl;
 }
 
@@ -323,6 +387,7 @@ void writeSharedEdgesToFile(const std::string& filename,
         std::cerr << "Unable to open file: " << filename << std::endl;
         return;
     }
+    std::cout << "EDGES size " << edgeMap.size() << std::endl;
 
     for (const auto& pair : edgeMap) {
         const Edge& edge = pair.first;
@@ -388,4 +453,23 @@ void writeGeometryAndQuadratureToFile(
     }
     
     file.close();
+}
+
+// строит единичный вектор с в плоскости перпендикулярных векторов а и б под углом альфа к а
+Vertex buildVectorTau(const Vertex& a, const Vertex& b, double alpha) {
+    // Нормализуем вектора a и b
+    Vertex na = a / std::sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+    Vertex nb = b / std::sqrt(b.x*b.x+b.y*b.y+b.z*b.z);
+
+    // Перевод угла alpha из градусов в радианы
+    double alphaRad = alpha * M_PI / 180.0;
+
+    // Вычисляем единичный вектор c
+    Vertex c(
+        std::cos(alphaRad) * na.x + std::sin(alphaRad) * nb.x,
+        std::cos(alphaRad) * na.y + std::sin(alphaRad) * nb.y,
+        std::cos(alphaRad) * na.z + std::sin(alphaRad) * nb.z,
+        -1);
+
+    return c;
 }
