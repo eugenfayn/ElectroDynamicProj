@@ -6,12 +6,12 @@
 // Добавить волновое число правильное
 std::complex<double> calcF(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
     std::complex<double> RES(0.0, 0.0);
-    double R = abs(Xk - Ym);
+    double R = Xk.distance(Ym);
     Vertex Point1 = Cx - Xk; // Xk в квадратуре
     Vertex Point2 = Cy - Ym; // Ym в квадратуре
     double scalar = Point1.scalar_product(Point2);
     std::complex<double> POW(0.0, wavenumber * R);
-    RES = -4 + wavenumber * wavenumber * scalar * exp(POW)/R;
+    RES += std::complex<double>(-4.0,0.0) + wavenumber * wavenumber * scalar * exp(POW)/R;
     return RES;
 }
 

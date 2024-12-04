@@ -27,7 +27,7 @@ class Triangle {
 public:
     Vertex a,b,c;
     double calcSquare() const;
-}
+};
 class Face {
 public:
     int v1, v2, v3;
