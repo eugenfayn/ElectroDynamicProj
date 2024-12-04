@@ -61,7 +61,7 @@ double Vertex::scalar_product(const Vertex& other) const {
 }
 
 double Vertex::calc_S(const Vertex& b, const Vertex& c) const {
-    constexpr auto max_precision{std::numeric_limits<long double>::digits10 + 1};
+    // constexpr auto max_precision{std::numeric_limits<long double>::digits10 + 1};
     
     // Calculate vectors from current vertex to b and c
     double v1x = b.x - x;
@@ -85,7 +85,7 @@ double Vertex::calc_S(const Vertex& b, const Vertex& c) const {
     // std::cout << "A(" << x << ", " << y << ", " << z << ")" << std::endl;
     // std::cout << "B(" << b.x << ", " << b.y << ", " << b.z << ")" << std::endl;
     // std::cout << "C(" << c.x << ", " << c.y << ", " << c.z << ")" << std::endl;
-    std::cout << std::setprecision(max_precision) << "Area = " << S << std::endl;
+    // std::cout << std::setprecision(max_precision) << "Area = " << S << std::endl;
     
     return S;
 }

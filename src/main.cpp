@@ -165,11 +165,26 @@ int main() {
             std::cout << std::endl;
         }
 
+        std::complex<double>* b = new std::complex<double>[N];
+        // Initialize all elements to 0+0i (optional)
+        for(int i = 0; i < N; i++) {
+            b[i] = std::complex<double>(0.0, 0.0);
+        }
+
+        const Vertex polarization(0.0, 1.0, 0.0, -1);
+        const Vertex tension(-1.0, 0.0, 0.0, -2);
+
+        BuildRightPart(b, N, trianglesPtr, polarization, tension);
+
+        SolveSLE(A, N, b);
+
         // Clean up
         for(int i = 0; i < N; i++) {
             delete[] A[i];
         }
         delete[] A;
+
+        delete[] b;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
