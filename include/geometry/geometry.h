@@ -22,6 +22,11 @@ public:
     double calc_S(const Vertex& b, const Vertex& c) const;
 };
 
+class Triangle {
+public:
+    Vertex a,b,c;
+    double calcSquare() const;
+}
 class Face {
 public:
     int v1, v2, v3;

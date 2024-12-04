@@ -60,7 +60,7 @@ double Quadrature::integrateOverFace(
     const Vertex& v3 = vertices[face.v3];
     
     // Calculate area using cross product for 3D triangle
-    Vertex edge1 = v2 - v1;
+    Vertex edge1 = v2 - v1; 
     Vertex edge2 = v3 - v1;
     
     double nx = edge1.y * edge2.z - edge1.z * edge2.y;

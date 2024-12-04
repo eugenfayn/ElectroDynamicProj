@@ -52,6 +52,11 @@ double Vertex::calc_S(const Vertex& b, const Vertex& c) const{
     return S;
 }
 
+double Vertex::ABS(const Vertex& b) const{
+    double abs_ = 0.0
+}
+
+
 // Face implementations
 Face::Face() : v1(0), v2(0), v3(0) {}
 Face::Face(int v1, int v2, int v3) : v1(v1), v2(v2), v3(v3) {}
