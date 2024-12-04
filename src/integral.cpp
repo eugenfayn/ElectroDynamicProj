@@ -62,7 +62,7 @@ void BuildMatrix(std::complex<double>** &A, int N, int b, Triangle* &triangles){
             coef = 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j + 1].calc_S());
             sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j + 1], triangles[2 * i + 1].getC() , triangles[2 * j + 1].getC());
             // Записываем результат в A_ij
-            A[i - 1][j - 1] = sum_;
+            A[i][j] = sum_;
         }
     }
 }
