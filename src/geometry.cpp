@@ -26,6 +26,7 @@ bool Vertex::operator<(const Vertex& other) const {
     return x < other.x;
 }
 
+
 Vertex Vertex::operator+(const Vertex& other) const {
     return Vertex(x + other.x, y + other.y, z + other.z, index);
 }
@@ -40,6 +41,19 @@ Vertex Vertex::operator/(double scalar) const {
 
 Vertex Vertex::operator*(double scalar) const {
     return Vertex(x * scalar, y * scalar, z * scalar, index);
+}
+
+Vertex::Vertex(const Vertex& other)
+    : x(other.x), y(other.y), z(other.z), index(other.index) {}
+
+Vertex& Vertex::operator=(const Vertex& other) {
+    if (this != &other) {  // Check for self-assignment
+        x = other.x;
+        y = other.y;
+        z = other.z;
+        index = other.index;
+    }
+    return *this;
 }
 
 double Vertex::scalar_product(const Vertex& other) const {
