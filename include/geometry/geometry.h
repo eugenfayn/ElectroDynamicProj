@@ -53,6 +53,9 @@ public:
     const Vertex& getA() const { return a; }
     const Vertex& getB() const { return b; }
     const Vertex& getC() const { return c; }
+
+    // Calculate area
+    double calc_S() const;  // Add this declaration
 };
 
 

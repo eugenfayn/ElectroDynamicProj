@@ -68,6 +68,11 @@ Triangle::Triangle() : a(), b(), c() {}
 Triangle::Triangle(const Vertex& a_, const Vertex& b_, const Vertex& c_) 
     : a(a_), b(b_), c(c_) {}
 
+double Triangle::calc_S() const {
+    // Using the existing calc_S method from Vertex class
+    return a.calc_S(b, c);
+}
+
 std::vector<Triangle> parseSharedEdges(const std::string& filename) {
     std::vector<Triangle> triangles;
     std::ifstream file(filename);
