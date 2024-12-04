@@ -11,6 +11,9 @@
 #include <sstream>
 #include <map>
 #include <array>
+#include <algorithm>
+#include <complex>
+#include <cmath>
 
 class Vertex {
 public:
@@ -28,6 +31,8 @@ public:
     Vertex operator-(const Vertex& other) const;
     Vertex operator/(double scalar) const;
     Vertex operator*(double scalar) const;
+    Vertex operator*(const std::complex<double>& scalar) const;
+    friend Vertex operator*(const std::complex<double>& scalar, const Vertex& vertex);
     Vertex& operator=(const Vertex& other);
     double scalar_product(const Vertex& other) const;
     double calc_S(const Vertex& b, const Vertex& c) const;
@@ -48,6 +53,7 @@ private:
     Vertex a;  // first vertex of the shared edge
     Vertex b;  // second vertex of the shared edge
     Vertex c;  // vertex not on the shared edge
+    int vertex_indices[3];
 
 public:
     Triangle();  // default constructor
@@ -59,7 +65,11 @@ public:
     const Vertex& getC() const { return c; }
 
     // Calculate area
-    double calc_S() const;  // Add this declaration
+    double calc_S() const;
+    std::vector<int> getVertexIndices() const {
+        // Return the vertex indices that make up this triangle
+        return {this->a.index, this->b.index, this->c.index};
+    }
 };
 
 
@@ -78,6 +88,26 @@ public:
 
 struct EdgeHash {
     std::size_t operator()(const Edge& edge) const;
+};
+
+class MeshAnalyzer {
+public:
+    struct Edge {
+        int v1, v2;
+        
+        Edge(int vertex1, int vertex2) {
+            v1 = std::min(vertex1, vertex2);
+            v2 = std::max(vertex1, vertex2);
+        }
+        
+        bool operator<(const Edge& other) const {
+            if (v1 != other.v1) return v1 < other.v1;
+            return v2 < other.v2;
+        }
+    };
+
+    static std::map<int, std::vector<int>> findNeighboringTriangles(const Triangle* triangles, const int N);
+    static std::vector<Edge> getTriangleEdges(const Triangle& triangle);
 };
 
 // Geometry processing functions
