@@ -97,11 +97,11 @@ void BuildMatrix(std::complex<double>** &A, const int N, const Triangle* &triang
 // wavenumber - волновое число
 void BuildRightPart(std::complex<double>* &f, const int N, const Triangle* &triangles, const Vertex polarization, const Vertex tension, double wavenumber=1){
     double wK[4]{-9./16, 25./48, 25./48, 25./48};
-    double wM[3]{1./3, 1./3, 1./3};
+    // double wM[3]{1./3, 1./3, 1./3};
     double ksi4[4]{1./3, 3./5, 1./5, 1./5};
     double eta4[4]{1./3, 1./5, 3./5, 1./5};
-    double ksi3[3]{1./6, 2./3, 1./6};
-    double eta3[3]{1./6, 1./6, 2./3};
+    // double ksi3[3]{1./6, 2./3, 1./6};
+    // double eta3[3]{1./6, 1./6, 2./3};
     for (int i=0; i < N; i++){
         std::complex<double> sum_(0.0,0.0);
         for (int p=0; p <2 ; p++){
@@ -168,6 +168,11 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
     if (info != 0) {
         std::cout << "LAPACK solver failed with error code: " << info << std::endl;
         // Handle error
+    }
+
+    std::cout << "\nb after LAPACK:\n";
+    for (int i = 0; i < 9; i++){
+        std::cout << b[i] << " ";
     }
 
     double error = 0.0;
