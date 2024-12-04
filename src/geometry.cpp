@@ -47,11 +47,39 @@ double Vertex::scalar_product(const Vertex& other) const {
 }
 
 double Vertex::calc_S(const Vertex& b, const Vertex& c) const {
-    double S = 0.0;
-    S = S + (b.x - x) * (c.y - y);
-    S = S - (c.x - x) * (b.y - y);
-    S = 0.5 * S;
+    constexpr auto max_precision{std::numeric_limits<long double>::digits10 + 1};
+    
+    // Calculate vectors from current vertex to b and c
+    double v1x = b.x - x;
+    double v1y = b.y - y;
+    double v1z = b.z - z;
+    
+    double v2x = c.x - x;
+    double v2y = c.y - y;
+    double v2z = c.z - z;
+    
+    // Calculate cross product components
+    double nx = v1y * v2z - v1z * v2y;
+    double ny = v1z * v2x - v1x * v2z;
+    double nz = v1x * v2y - v1y * v2x;
+    
+    // Calculate magnitude of cross product and divide by 2
+    double S = 0.5 * sqrt(nx*nx + ny*ny + nz*nz);
+    
+    // Debug output
+    // std::cout << "Triangle vertices:" << std::endl;
+    // std::cout << "A(" << x << ", " << y << ", " << z << ")" << std::endl;
+    // std::cout << "B(" << b.x << ", " << b.y << ", " << b.z << ")" << std::endl;
+    // std::cout << "C(" << c.x << ", " << c.y << ", " << c.z << ")" << std::endl;
+    std::cout << std::setprecision(max_precision) << "Area = " << S << std::endl;
+    
     return S;
+}
+
+double Vertex::distance(const Vertex& other) const{
+    double abs = 0.0;
+    abs += sqrt( (other.x - x) * (other.x - x) + (other.y - y) * (other.y - y) + (other.z - z) * (other.z - z));
+    return abs;
 }
 
 
@@ -233,9 +261,11 @@ void printGeometryInfo(const std::vector<Vertex>& vertices,
     // Print first 5 shared edges
     std::cout << "Edges that belong to exactly two faces and their corresponding faces:" << std::endl;
     size_t count = 0;
+    int sharedEdgeCount = 0;
     for (const auto& [edge, faceIndices] : edgeMap) {
         if (count >= 5) break;
         if (faceIndices.size() == 2) {
+            sharedEdgeCount++;
             std::cout << "Edge: " << edge.v1 + 1 << " " << edge.v2 + 1 
                      << " belongs to faces: ";
             for (int faceIndex : faceIndices) {
@@ -248,6 +278,7 @@ void printGeometryInfo(const std::vector<Vertex>& vertices,
             ++count;
         }
     }
+    std::cout << "Shared edges size " << sharedEdgeCount << std::endl;
 }
 
 std::unordered_map<Edge, std::vector<int>, EdgeHash> findEdges(const std::vector<Face>& faces) {
