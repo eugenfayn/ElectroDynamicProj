@@ -1,15 +1,30 @@
 #include <iostream>
-#include <complex.h>
+#include <complex>
 #include "geometry/geometry.h"
 #include "quadrature/quadrature.h"
 #include "cmath"
+#include <chrono>
+#include <lapack.h>
+#include <random>
+#include <unistd.h>
+
+
+using namespace std;
+
+// Generate random float number
+double randomFloat() {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<float> dis(0.0, 1.0);
+    return dis(gen);
+}
 
 // Добавить волновое число правильное
 std::complex<double> calcF_Aij(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
     std::complex<double> RES(0.0, 0.0);
     double R = Xk.distance(Ym);
 
-    if (R < 1e-7){
+    if (R < 1e-7) {
         return 0;
     }
 
@@ -56,28 +71,119 @@ void BuildMatrix(std::complex<double>** &A, const int N, const Triangle* &triang
     double coef = 0.0;
     for (int i=0; i < N; i++){
         for (int j=0; j < N; j++){
-            if (i == j){
-                A[i][j] = std::complex<double>(0.0, 0.0);
-            }
-            else{
-                std::complex<double> sum_(0.0,0.0);
-                // p=1,q=1
-                coef = 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j].calc_S());
-                sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j], triangles[2 * i].getC() , triangles[2 * j].getC());
-                // p=1,q=2
-                coef = - 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j + 1].calc_S());
-                sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j +1], triangles[2 * i].getC() , triangles[2 * j + 1].getC());
-                // p=2,q=1
-                coef = - 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j].calc_S());
-                sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j], triangles[2 * i + 1].getC() , triangles[2 * j].getC());
-                // p=2,q=2
-                coef = 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j + 1].calc_S());
-                sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j + 1], triangles[2 * i + 1].getC() , triangles[2 * j + 1].getC());
-                // Записываем результат в A_ij
-                A[i][j] = sum_;
-            }
+            std::complex<double> sum_(0.0,0.0);
+            // p=1,q=1
+            coef = 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j].calc_S());
+            sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j], triangles[2 * i].getC() , triangles[2 * j].getC());
+            // p=1,q=2
+            coef = - 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j + 1].calc_S());
+            sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j +1], triangles[2 * i].getC() , triangles[2 * j + 1].getC());
+            // p=2,q=1
+            coef = - 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j].calc_S());
+            sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j], triangles[2 * i + 1].getC() , triangles[2 * j].getC());
+            // p=2,q=2
+            coef = 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j + 1].calc_S());
+            sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j + 1], triangles[2 * i + 1].getC() , triangles[2 * j + 1].getC());
+            // Записываем результат в A_ij
+            A[i][j] = sum_;
         }
     }
 }
 
+// f - COMPLEX вектор правой части матричного уравнения для RWG
+// N - размер вектора
+// triangles - массив треугольников
+// polarization - вектор поляризации, пока заговнокодим его координаты в Vertex
+// tension- вектор напряжения, также
+// wavenumber - волновое число
+void BuildRightPart(std::complex<double>* &f, const int N, const Triangle* &triangles, const Vertex polarization, const Vertex tension, double wavenumber=1){
+    double wK[4]{-9./16, 25./48, 25./48, 25./48};
+    // double wM[3]{1./3, 1./3, 1./3};
+    double ksi4[4]{1./3, 3./5, 1./5, 1./5};
+    double eta4[4]{1./3, 1./5, 3./5, 1./5};
+    // double ksi3[3]{1./6, 2./3, 1./6};
+    // double eta3[3]{1./6, 1./6, 2./3};
+    for (int i=0; i < N; i++){
+        std::complex<double> sum_(0.0,0.0);
+        for (int p=0; p <2 ; p++){
+            for (int k=0; k < 4 ; k++){
+                int sign = (1)?(-1):(p%2);
+                Triangle currentTriangle = triangles[2 * i + p%2];
+                Vertex Cp = currentTriangle.getC();
+                Vertex Xk = currentTriangle.getA() * ksi4[k]+ currentTriangle.getB() *  eta4[k] +  currentTriangle.getC() * (1 - ksi4[k] - eta4[k]) ; 
+                double Sp = currentTriangle.calc_S();
+                double tensionProductX = Xk.scalar_product(tension);
+                double POW = wavenumber*tensionProductX;
+                std::complex<double> exp_(cos(POW), sin(POW));
+                sum_ += sign * ((Cp*(-1) + Xk)/Sp).scalar_product(polarization) * exp_ * wK[k]; //* ?
+            }
+        }
+        f[i] = sum_;
+    }
+}
 
+void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
+    std::complex<double>* A_1d = new std::complex<double>[N * N];
+    std::complex<double> *b_copy = (std::complex<double>*)malloc(N * sizeof(std::complex<double>));
+
+    // Copy elements from 2D to 1D
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < N; j++) {
+            A_1d[i * N + j] = A[j][i];
+        }
+    }
+
+    std::cout << "\n2D Matrix:\n";
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            std::cout << A[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
+    
+    std::cout << "\n1D Matrix:\n";
+    for(int i = 0; i < 9; i++) {
+        std::cout << A_1d[i] << " ";
+        if((i + 1) % 5 == 0) std::cout << "\n"; // New line every 5 elements for readability
+    }
+    std::cout << "\n";
+
+    for (int i = 0; i < N; i++){
+        b_copy[i] = b[i];
+    }
+
+    std::cout << "\nb:\n";
+    for (int i = 0; i < 9; i++){
+        std::cout << b[i] << " ";
+    }
+    
+    __complex__ double* A_casted = reinterpret_cast<__complex__ double*>(A_1d);
+    __complex__ double* B_casted = reinterpret_cast<__complex__ double*>(b);
+	
+    int Nrhs = 1;
+    int *Ipvt = (int*)malloc(N * sizeof(N));
+    int info;
+    LAPACK_zgesv(&N, &Nrhs, A_casted, &N, Ipvt, B_casted, &N, &info);
+
+    double error = 0.0;
+    // Compare
+    std::complex<double>* rhs = new std::complex<double>[N];
+    for (int i = 0; i < N; ++i) {
+            rhs[i] = std::complex<double>(0.0,0.0);
+            for (int j = 0; j < N; ++j) {
+                    rhs[i] += A_1d[j * N + i] * b[j];
+            }
+            error += abs(b_copy[i] - rhs[i]);
+        }
+
+    std::cout << "\nFinal rhs vector:\n";
+    for (int i = 0; i < 9; i++) {
+        std::cout << rhs[i] << " ";
+    }
+    std::cout << "\n";
+
+    delete[] rhs;
+
+    printf("error %.20f", error);
+    printf("\n\n");
+}
