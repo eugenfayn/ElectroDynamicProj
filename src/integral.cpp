@@ -8,25 +8,30 @@
 std::complex<double> calcF_Aij(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
     std::complex<double> RES(0.0, 0.0);
     double R = Xk.distance(Ym);
+
     if (R < 1e-7){
         return 0;
     }
+
+    std::complex<double> exp_(cos(wavenumber*R), sin(wavenumber*R));
+
     Vertex Point1 = Cx - Xk; // Xk в квадратуре
     Vertex Point2 = Cy - Ym; // Ym в квадратуре
+
     double scalar = Point1.scalar_product(Point2);
     std::complex<double> POW(0.0, wavenumber * R);
-    RES += std::complex<double>(-4.0,0.0) + wavenumber * wavenumber * scalar * exp(POW)/R;
+    RES += std::complex<double>(0.0,0.0) + (-4.0 + wavenumber * wavenumber * scalar) * exp_/R;
     return RES;
 }
 
 // Достать список весов отдельно вынести
 std::complex<double> FindI_Aij(Triangle sigmaX,Triangle sigmaY,Vertex Cx, Vertex Cy){
-    double wK[4]{-9/16, 25/48, 25/48, 25/48}; // Четырёхточечный Гаусс. Веса.
-    double wM[3]{1/3, 1/3, 1/3}; // Трёхточечный Гаусс. Веса.
-    double ksi4[4]{1/3, 3/5, 1/5, 1/5};
-    double eta4[4]{1/3, 1/5, 3/5, 1/5};
-    double ksi3[3]{1/6, 2/3, 1/6};
-    double eta3[3]{1/6, 1/6, 2/3};
+    double wK[4]{-9.0/16.0, 25.0/48.0, 25.0/48.0, 25.0/48.0}; // Четырёхточечный Гаусс. Веса.
+    double wM[3]{1.0/3.0, 1.0/3.0, 1.0/3.0}; // Трёхточечный Гаусс. Веса.
+    double ksi4[4]{1.0/3.0, 3.0/5.0, 1.0/5.0, 1.0/5.0};
+    double eta4[4]{1.0/3.0, 1.0/5.0, 3.0/5.0, 1.0/5.0};
+    double ksi3[3]{1.0/6.0, 2.0/3.0, 1.0/6.0};
+    double eta3[3]{1.0/6.0, 1.0/6.0, 2.0/3.0};
     std::complex<double> RES = sigmaX.calc_S() * sigmaY.calc_S();
     std::complex<double> SUM_(0.0,0.0);
     // Формирование интеграла
@@ -51,30 +56,26 @@ void BuildMatrix(std::complex<double>** &A, const int N, const Triangle* &triang
     double coef = 0.0;
     for (int i=0; i < N; i++){
         for (int j=0; j < N; j++){
-            std::complex<double> sum_(0.0,0.0);
-            // p=1,q=1
-            coef = 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j].calc_S());
-            sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j], triangles[2 * i].getC() , triangles[2 * j].getC());
-            std::cout << "SUM 1: " << sum_ << std::endl;
-            std::cout << "coef 1 " << coef << std::endl;
-            // p=1,q=2
-            coef = - 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j + 1].calc_S());
-            sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j +1], triangles[2 * i].getC() , triangles[2 * j + 1].getC());
-            std::cout << "SUM 2: " << sum_ << std::endl;
-            std::cout << "coef 2 " << coef << std::endl;
-            // p=2,q=1
-            coef = - 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j].calc_S());
-            sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j], triangles[2 * i + 1].getC() , triangles[2 * j].getC());
-            std::cout << "SUM 3: " << sum_ << std::endl;
-            std::cout << "coef 3 " << coef << std::endl;
-            // p=2,q=2
-            coef = 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j + 1].calc_S());
-            sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j + 1], triangles[2 * i + 1].getC() , triangles[2 * j + 1].getC());
-            std::cout << "SUM 4: " << sum_ << std::endl;
-            std::cout << "coef 4 " << coef << std::endl;
-            // Записываем результат в A_ij
-            A[i][j ] = sum_;
-            // throw std::runtime_error("STOP");
+            if (i == j){
+                A[i][j] = std::complex<double>(0.0, 0.0);
+            }
+            else{
+                std::complex<double> sum_(0.0,0.0);
+                // p=1,q=1
+                coef = 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j].calc_S());
+                sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j], triangles[2 * i].getC() , triangles[2 * j].getC());
+                // p=1,q=2
+                coef = - 1 / (4 * M_PI * triangles[2 * i].calc_S() * triangles[2 * j + 1].calc_S());
+                sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j +1], triangles[2 * i].getC() , triangles[2 * j + 1].getC());
+                // p=2,q=1
+                coef = - 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j].calc_S());
+                sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j], triangles[2 * i + 1].getC() , triangles[2 * j].getC());
+                // p=2,q=2
+                coef = 1 / (4 * M_PI * triangles[2 * i + 1].calc_S() * triangles[2 * j + 1].calc_S());
+                sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j + 1], triangles[2 * i + 1].getC() , triangles[2 * j + 1].getC());
+                // Записываем результат в A_ij
+                A[i][j] = sum_;
+            }
         }
     }
 }

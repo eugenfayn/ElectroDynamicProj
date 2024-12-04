@@ -19,6 +19,8 @@ public:
 
     Vertex();
     Vertex(double x_, double y_, double z_, int index_);
+
+    Vertex(const Vertex& other);
     
     bool operator==(const Vertex& other) const;
     bool operator<(const Vertex& other) const;
@@ -26,6 +28,7 @@ public:
     Vertex operator-(const Vertex& other) const;
     Vertex operator/(double scalar) const;
     Vertex operator*(double scalar) const;
+    Vertex& operator=(const Vertex& other);
     double scalar_product(const Vertex& other) const;
     double calc_S(const Vertex& b, const Vertex& c) const;
     double distance(const Vertex& other) const;
