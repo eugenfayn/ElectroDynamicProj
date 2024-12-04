@@ -66,8 +66,7 @@ std::complex<double> FindI_Aij(Triangle sigmaX,Triangle sigmaY,Vertex Cx, Vertex
 // Чекнуть нумерацию рёбер с нуля или нет. В Edge начинается с нуля
 // triangles - массив треугольников
 void BuildMatrix(std::complex<double>** &A, const int N, const Triangle* &triangles){
-    // Идём по I,J.
-    // В случае если I,J равны 0    
+    // Идём по I,J. 
     double coef = 0.0;
     for (int i=0; i < N; i++){
         for (int j=0; j < N; j++){
@@ -98,11 +97,11 @@ void BuildMatrix(std::complex<double>** &A, const int N, const Triangle* &triang
 // wavenumber - волновое число
 void BuildRightPart(std::complex<double>* &f, const int N, const Triangle* &triangles, const Vertex polarization, const Vertex tension, double wavenumber=1){
     double wK[4]{-9./16, 25./48, 25./48, 25./48};
-    // double wM[3]{1./3, 1./3, 1./3};
+    double wM[3]{1./3, 1./3, 1./3};
     double ksi4[4]{1./3, 3./5, 1./5, 1./5};
     double eta4[4]{1./3, 1./5, 3./5, 1./5};
-    // double ksi3[3]{1./6, 2./3, 1./6};
-    // double eta3[3]{1./6, 1./6, 2./3};
+    double ksi3[3]{1./6, 2./3, 1./6};
+    double eta3[3]{1./6, 1./6, 2./3};
     for (int i=0; i < N; i++){
         std::complex<double> sum_(0.0,0.0);
         for (int p=0; p <2 ; p++){
@@ -190,18 +189,18 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
 
     delete[] rhs;
 
-    printf("error %.20f", error);
+    printf("Rhs - b error %.20f", error);
     printf("\n\n");
 
-    // double relative_error = 0.0;
-    // double norm_b = 0.0;
-    // for(int i = 0; i < N; i++) {
-    //     std::complex<double> sum(0.0, 0.0);
-    //     for(int j = 0; j < N; j++) {
-    //         sum += A[i][j] * b[j];
-    //     }
-    //     relative_error += std::abs(sum - b_copy[i]);
-    //     norm_b += std::abs(b_copy[i]);
-    // }
-    // std::cout << "Relative error: " << relative_error/norm_b << std::endl;
+    double relative_error = 0.0;
+    double norm_b = 0.0;
+    for(int i = 0; i < N; i++) {
+        std::complex<double> sum(0.0, 0.0);
+        for(int j = 0; j < N; j++) {
+            sum += A[i][j] * b[j];
+        }
+        relative_error += std::abs(sum - b_copy[i]);
+        norm_b += std::abs(b_copy[i]);
+    }
+    std::cout << "Relative error (rhs-b error divided by abs sum of b): " << relative_error/norm_b << std::endl;
 }
