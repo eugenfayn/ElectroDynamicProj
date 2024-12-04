@@ -15,9 +15,10 @@
 class Vertex {
 public:
     double x, y, z;
+    int index;
 
     Vertex();
-    Vertex(double x, double y, double z);
+    Vertex(double x_, double y_, double z_, int index_);
     
     bool operator==(const Vertex& other) const;
     bool operator<(const Vertex& other) const;
@@ -25,7 +26,7 @@ public:
     Vertex operator-(const Vertex& other) const;
     Vertex operator/(double scalar) const;
     Vertex operator*(double scalar) const;
-    double scalar_product(const Vertex& other);
+    double scalar_product(const Vertex& other) const;
     double calc_S(const Vertex& b, const Vertex& c) const;
 };
 
@@ -40,23 +41,20 @@ public:
 
 class Triangle {
 private:
-    int a;  // first vertex of the shared edge
-    int b;  // second vertex of the shared edge
-    int c;  // vertex not on the shared edge
-    std::array<std::array<double, 3>, 3> vertices;  // stores x,y,z coordinates for each vertex
+    Vertex a;  // first vertex of the shared edge
+    Vertex b;  // second vertex of the shared edge
+    Vertex c;  // vertex not on the shared edge
 
 public:
     Triangle();  // default constructor
-    Triangle(int a_, int b_, int c_, 
-            const double* v1, const double* v2, const double* v3);
+    Triangle(const Vertex& a_, const Vertex& b_, const Vertex& c_);
     
     // Getters
-    int getA() const;
-    int getB() const;
-    int getC() const;
-    
-    void getVertexCoordinates(int vertex, double& x, double& y, double& z) const;
+    const Vertex& getA() const { return a; }
+    const Vertex& getB() const { return b; }
+    const Vertex& getC() const { return c; }
 };
+
 
 // Function declaration for parsing shared edges
 std::vector<Triangle> parseSharedEdges(const std::string& filename);

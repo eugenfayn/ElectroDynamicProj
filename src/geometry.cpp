@@ -3,16 +3,22 @@
 
 
 // Vertex implementations
-Vertex::Vertex() : x(0.0), y(0.0), z(0.0) {}
-Vertex::Vertex(double x, double y, double z) : x(x), y(y), z(z) {}
+Vertex::Vertex() : x(0.0), y(0.0), z(0.0), index(-1) {}
 
+Vertex::Vertex(double x_, double y_, double z_, int index_) 
+    : x(x_), y(y_), z(z_), index(index_) {}
+
+// Keep the existing operator implementations but update them to handle the index
 bool Vertex::operator==(const Vertex& other) const {
-    return x == other.x && y == other.y && z == other.z;
+    return x == other.x && y == other.y && z == other.z && index == other.index;
 }
 
 bool Vertex::operator<(const Vertex& other) const {
     if (x == other.x) {
         if (y == other.y) {
+            if (z == other.z) {
+                return index < other.index;
+            }
             return z < other.z;
         }
         return y < other.y;
@@ -21,32 +27,33 @@ bool Vertex::operator<(const Vertex& other) const {
 }
 
 Vertex Vertex::operator+(const Vertex& other) const {
-    return Vertex(x + other.x, y + other.y, z + other.z);
+    return Vertex(x + other.x, y + other.y, z + other.z, index);
 }
 
 Vertex Vertex::operator-(const Vertex& other) const {
-    return Vertex(x - other.x, y - other.y, z - other.z);
+    return Vertex(x - other.x, y - other.y, z - other.z, index);
 }
 
 Vertex Vertex::operator/(double scalar) const {
-    return Vertex(x/scalar, y/scalar, z/scalar);
+    return Vertex(x/scalar, y/scalar, z/scalar, index);
 }
 
 Vertex Vertex::operator*(double scalar) const {
-    return Vertex(x * scalar, y * scalar, z * scalar);
+    return Vertex(x * scalar, y * scalar, z * scalar, index);
 }
 
-double Vertex::scalar_product(const Vertex& other) {
+double Vertex::scalar_product(const Vertex& other) const {
     return x * other.x + y * other.y + z * other.z;
 }
 
-double Vertex::calc_S(const Vertex& b, const Vertex& c) const{
+double Vertex::calc_S(const Vertex& b, const Vertex& c) const {
     double S = 0.0;
     S = S + (b.x - x) * (c.y - y);
     S = S - (c.x - x) * (b.y - y);
     S = 0.5 * S;
     return S;
 }
+
 
 // Face implementations
 Face::Face() : v1(0), v2(0), v3(0) {}
@@ -56,41 +63,10 @@ bool Face::operator==(const Face& other) const {
     return v1 == other.v1 && v2 == other.v2 && v3 == other.v3;
 }
 
-Triangle::Triangle() : a(0), b(0), c(0) {
-    for (auto& vertex : vertices) {
-        vertex.fill(0.0);
-    }
-}
+Triangle::Triangle() : a(), b(), c() {}
 
-Triangle::Triangle(int a_, int b_, int c_, 
-                  const double* v1, const double* v2, const double* v3) 
-    : a(a_), b(b_), c(c_) {
-    // Store coordinates for vertex a
-    vertices[0] = {v1[0], v1[1], v1[2]};
-    // Store coordinates for vertex b
-    vertices[1] = {v2[0], v2[1], v2[2]};
-    // Store coordinates for vertex c
-    vertices[2] = {v3[0], v3[1], v3[2]};
-}
-
-int Triangle::getA() const { 
-    return a; 
-}
-
-int Triangle::getB() const { 
-    return b; 
-}
-
-int Triangle::getC() const { 
-    return c; 
-}
-
-void Triangle::getVertexCoordinates(int vertex, double& x, double& y, double& z) const {
-    int idx = (vertex == a) ? 0 : (vertex == b) ? 1 : 2;
-    x = vertices[idx][0];
-    y = vertices[idx][1];
-    z = vertices[idx][2];
-}
+Triangle::Triangle(const Vertex& a_, const Vertex& b_, const Vertex& c_) 
+    : a(a_), b(b_), c(c_) {}
 
 std::vector<Triangle> parseSharedEdges(const std::string& filename) {
     std::vector<Triangle> triangles;
@@ -99,9 +75,9 @@ std::vector<Triangle> parseSharedEdges(const std::string& filename) {
     
     while (std::getline(file, line)) {
         if (line.find("Edge:") != std::string::npos) {
-            // Parse shared edge vertices
-            int sharedV1, sharedV2;
-            sscanf(line.c_str(), "Edge: %d %d", &sharedV1, &sharedV2);
+            // Parse shared edge vertices indices
+            int sharedV1Idx, sharedV2Idx;
+            sscanf(line.c_str(), "Edge: %d %d", &sharedV1Idx, &sharedV2Idx);
             
             // Skip "Belongs to faces:" line
             std::getline(file, line);
@@ -111,71 +87,65 @@ std::vector<Triangle> parseSharedEdges(const std::string& filename) {
             int faceNum1, f1v1, f1v2, f1v3;
             sscanf(line.c_str(), "Face %d: %d %d %d", &faceNum1, &f1v1, &f1v2, &f1v3);
             
-            // Find the third vertex for first face (the one not in the shared edge)
-            int thirdV1;
-            if (f1v1 != sharedV1 && f1v1 != sharedV2) thirdV1 = f1v1;
-            else if (f1v2 != sharedV1 && f1v2 != sharedV2) thirdV1 = f1v2;
-            else thirdV1 = f1v3;
-            
             // Skip "Vertices:" line
             std::getline(file, line);
             
-            // Create map to store vertex coordinates
-            std::map<int, std::array<double, 3>> vertexCoords1;
-            
-            // Read coordinates and map them to vertices for first face
+            // Read coordinates and create Vertex objects for first face
+            std::map<int, Vertex> vertexMap1;
             for(int i = 0; i < 3; i++) {
                 std::getline(file, line);
-                std::array<double, 3> coords;
-                sscanf(line.c_str(), "%lf %lf %lf", &coords[0], &coords[1], &coords[2]);
-                if (i == 0) vertexCoords1[f1v1] = coords;
-                if (i == 1) vertexCoords1[f1v2] = coords;
-                if (i == 2) vertexCoords1[f1v3] = coords;
+                double x, y, z;
+                sscanf(line.c_str(), "%lf %lf %lf", &x, &y, &z);
+                if (i == 0) vertexMap1[f1v1] = Vertex(x, y, z, f1v1);
+                if (i == 1) vertexMap1[f1v2] = Vertex(x, y, z, f1v2);
+                if (i == 2) vertexMap1[f1v3] = Vertex(x, y, z, f1v3);
             }
+            
             // Read second face
             std::getline(file, line);
             int faceNum2, f2v1, f2v2, f2v3;
             sscanf(line.c_str(), "Face %d: %d %d %d", &faceNum2, &f2v1, &f2v2, &f2v3);
             
-            // Find the third vertex for second face
-            int thirdV2;
-            if (f2v1 != sharedV1 && f2v1 != sharedV2) thirdV2 = f2v1;
-            else if (f2v2 != sharedV1 && f2v2 != sharedV2) thirdV2 = f2v2;
-            else thirdV2 = f2v3;
-            
             // Skip "Vertices:" line
             std::getline(file, line);
             
-            // Create map to store vertex coordinates for second face
-            std::map<int, std::array<double, 3>> vertexCoords2;
-            
-            // Read coordinates and map them to vertices for second face
+            // Read coordinates and create Vertex objects for second face
+            std::map<int, Vertex> vertexMap2;
             for(int i = 0; i < 3; i++) {
                 std::getline(file, line);
-                std::array<double, 3> coords;
-                sscanf(line.c_str(), "%lf %lf %lf", &coords[0], &coords[1], &coords[2]);
-                if (i == 0) vertexCoords2[f2v1] = coords;
-                if (i == 1) vertexCoords2[f2v2] = coords;
-                if (i == 2) vertexCoords2[f2v3] = coords;
+                double x, y, z;
+                sscanf(line.c_str(), "%lf %lf %lf", &x, &y, &z);
+                if (i == 0) vertexMap2[f2v1] = Vertex(x, y, z, f2v1);
+                if (i == 1) vertexMap2[f2v2] = Vertex(x, y, z, f2v2);
+                if (i == 2) vertexMap2[f2v3] = Vertex(x, y, z, f2v3);
             }
             
-            // Create first triangle
-            Triangle t1(sharedV1, sharedV2, thirdV1,
-                      vertexCoords1[sharedV1].data(),
-                      vertexCoords1[sharedV2].data(),
-                      vertexCoords1[thirdV1].data());
+            // Find third vertices (not in shared edge)
+            int thirdV1Idx;
+            if (f1v1 != sharedV1Idx && f1v1 != sharedV2Idx) thirdV1Idx = f1v1;
+            else if (f1v2 != sharedV1Idx && f1v2 != sharedV2Idx) thirdV1Idx = f1v2;
+            else thirdV1Idx = f1v3;
+            
+            int thirdV2Idx;
+            if (f2v1 != sharedV1Idx && f2v1 != sharedV2Idx) thirdV2Idx = f2v1;
+            else if (f2v2 != sharedV1Idx && f2v2 != sharedV2Idx) thirdV2Idx = f2v2;
+            else thirdV2Idx = f2v3;
+            
+            // Create triangles with Vertex objects
+            Triangle t1(vertexMap1[sharedV1Idx], 
+                      vertexMap1[sharedV2Idx], 
+                      vertexMap1[thirdV1Idx]);
             triangles.push_back(t1);
             
-            // Create second triangle
-            Triangle t2(sharedV1, sharedV2, thirdV2,
-                      vertexCoords2[sharedV1].data(),
-                      vertexCoords2[sharedV2].data(),
-                      vertexCoords2[thirdV2].data());
+            Triangle t2(vertexMap2[sharedV1Idx], 
+                      vertexMap2[sharedV2Idx], 
+                      vertexMap2[thirdV2Idx]);
             triangles.push_back(t2);
         }
     }
     return triangles;
 }
+
 
 
 // Edge implementations
