@@ -1,10 +1,6 @@
 #include "geometry/geometry.h"
 #include "quadrature/quadrature.h"
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <fstream>
-#include <sstream>
+
 
 // Vertex implementations
 Vertex::Vertex() : x(0.0), y(0.0), z(0.0) {}
@@ -59,6 +55,128 @@ Face::Face(int v1, int v2, int v3) : v1(v1), v2(v2), v3(v3) {}
 bool Face::operator==(const Face& other) const {
     return v1 == other.v1 && v2 == other.v2 && v3 == other.v3;
 }
+
+Triangle::Triangle() : a(0), b(0), c(0) {
+    for (auto& vertex : vertices) {
+        vertex.fill(0.0);
+    }
+}
+
+Triangle::Triangle(int a_, int b_, int c_, 
+                  const double* v1, const double* v2, const double* v3) 
+    : a(a_), b(b_), c(c_) {
+    // Store coordinates for vertex a
+    vertices[0] = {v1[0], v1[1], v1[2]};
+    // Store coordinates for vertex b
+    vertices[1] = {v2[0], v2[1], v2[2]};
+    // Store coordinates for vertex c
+    vertices[2] = {v3[0], v3[1], v3[2]};
+}
+
+int Triangle::getA() const { 
+    return a; 
+}
+
+int Triangle::getB() const { 
+    return b; 
+}
+
+int Triangle::getC() const { 
+    return c; 
+}
+
+void Triangle::getVertexCoordinates(int vertex, double& x, double& y, double& z) const {
+    int idx = (vertex == a) ? 0 : (vertex == b) ? 1 : 2;
+    x = vertices[idx][0];
+    y = vertices[idx][1];
+    z = vertices[idx][2];
+}
+
+std::vector<Triangle> parseSharedEdges(const std::string& filename) {
+    std::vector<Triangle> triangles;
+    std::ifstream file(filename);
+    std::string line;
+    
+    while (std::getline(file, line)) {
+        if (line.find("Edge:") != std::string::npos) {
+            // Parse shared edge vertices
+            int sharedV1, sharedV2;
+            sscanf(line.c_str(), "Edge: %d %d", &sharedV1, &sharedV2);
+            
+            // Skip "Belongs to faces:" line
+            std::getline(file, line);
+            
+            // Read first face
+            std::getline(file, line);
+            int faceNum1, f1v1, f1v2, f1v3;
+            sscanf(line.c_str(), "Face %d: %d %d %d", &faceNum1, &f1v1, &f1v2, &f1v3);
+            
+            // Find the third vertex for first face (the one not in the shared edge)
+            int thirdV1;
+            if (f1v1 != sharedV1 && f1v1 != sharedV2) thirdV1 = f1v1;
+            else if (f1v2 != sharedV1 && f1v2 != sharedV2) thirdV1 = f1v2;
+            else thirdV1 = f1v3;
+            
+            // Skip "Vertices:" line
+            std::getline(file, line);
+            
+            // Create map to store vertex coordinates
+            std::map<int, std::array<double, 3>> vertexCoords1;
+            
+            // Read coordinates and map them to vertices for first face
+            for(int i = 0; i < 3; i++) {
+                std::getline(file, line);
+                std::array<double, 3> coords;
+                sscanf(line.c_str(), "%lf %lf %lf", &coords[0], &coords[1], &coords[2]);
+                if (i == 0) vertexCoords1[f1v1] = coords;
+                if (i == 1) vertexCoords1[f1v2] = coords;
+                if (i == 2) vertexCoords1[f1v3] = coords;
+            }
+            // Read second face
+            std::getline(file, line);
+            int faceNum2, f2v1, f2v2, f2v3;
+            sscanf(line.c_str(), "Face %d: %d %d %d", &faceNum2, &f2v1, &f2v2, &f2v3);
+            
+            // Find the third vertex for second face
+            int thirdV2;
+            if (f2v1 != sharedV1 && f2v1 != sharedV2) thirdV2 = f2v1;
+            else if (f2v2 != sharedV1 && f2v2 != sharedV2) thirdV2 = f2v2;
+            else thirdV2 = f2v3;
+            
+            // Skip "Vertices:" line
+            std::getline(file, line);
+            
+            // Create map to store vertex coordinates for second face
+            std::map<int, std::array<double, 3>> vertexCoords2;
+            
+            // Read coordinates and map them to vertices for second face
+            for(int i = 0; i < 3; i++) {
+                std::getline(file, line);
+                std::array<double, 3> coords;
+                sscanf(line.c_str(), "%lf %lf %lf", &coords[0], &coords[1], &coords[2]);
+                if (i == 0) vertexCoords2[f2v1] = coords;
+                if (i == 1) vertexCoords2[f2v2] = coords;
+                if (i == 2) vertexCoords2[f2v3] = coords;
+            }
+            
+            // Create first triangle
+            Triangle t1(sharedV1, sharedV2, thirdV1,
+                      vertexCoords1[sharedV1].data(),
+                      vertexCoords1[sharedV2].data(),
+                      vertexCoords1[thirdV1].data());
+            triangles.push_back(t1);
+            
+            // Create second triangle
+            Triangle t2(sharedV1, sharedV2, thirdV2,
+                      vertexCoords2[sharedV1].data(),
+                      vertexCoords2[sharedV2].data(),
+                      vertexCoords2[thirdV2].data());
+            triangles.push_back(t2);
+        }
+    }
+    return triangles;
+}
+
 
 // Edge implementations
 Edge::Edge() : v1(0), v2(0) {}
@@ -189,6 +307,8 @@ void writeSharedEdgesToFile(const std::string& filename,
     for (const auto& pair : edgeMap) {
         const Edge& edge = pair.first;
         const std::vector<int>& faceIndices = pair.second;
+
+        
         if (faceIndices.size() == 2) {
             file << "Edge: " << edge.v1 + 1 << " " << edge.v2 + 1 << "\n";
             file << "Belongs to faces:\n";
@@ -199,9 +319,16 @@ void writeSharedEdgesToFile(const std::string& filename,
                      << face.v3 + 1 << "\n";
                 file << "Vertices:\n";
                 for (int vertexIndex : {face.v1, face.v2, face.v3}) {
-                    const Vertex& vertex = vertices[vertexIndex];
-                    file << std::setprecision(max_precision) 
-                         << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+                    if (vertexIndex != edge.v1 && vertexIndex != edge.v2) {
+                        const Vertex& vertex = vertices[vertexIndex];
+                        file << std::setprecision(max_precision) 
+                            << vertex.x << " " << vertex.y << " " << vertex.z << " Index: " << vertexIndex + 1 << "\n";
+                    }
+                    else {
+                        const Vertex& vertex = vertices[vertexIndex];
+                        file << std::setprecision(max_precision) 
+                            << vertex.x << " " << vertex.y << " " << vertex.z << " Index: " << vertexIndex + 1 << "\n";
+                    }
                 }
             }
             file << "\n";

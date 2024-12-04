@@ -1,6 +1,5 @@
 // quadrature.cpp
 #include "quadrature/quadrature.h"
-#include "math.h"
 
 
 // quadrature.cpp

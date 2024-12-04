@@ -25,6 +25,7 @@ int main() {
 
     std::vector<Vertex> vertices;
     std::vector<Face> faces;
+    std::vector<Triangle> triangles;
     
     // Set the seed for the random number generator
     srand(time(NULL));
@@ -58,6 +59,32 @@ int main() {
         
         // Write results
         writeSharedEdgesToFile(outputFile.string(), vertices, faces, edgeMap);
+
+        std::vector<Triangle> triangles = parseSharedEdges(outputFile.string());
+        std::cout << "Number of triangles: " << triangles.size() << std::endl;
+
+        int ctr = 0;
+        for(const Triangle& triangle : triangles) {
+            // Access triangle vertices using:
+            double x1, y1, z1;  // for first vertex
+            double x2, y2, z2;  // for second vertex
+            double x3, y3, z3;  // for third vertex
+
+            // Get coordinates for each vertex
+            triangle.getVertexCoordinates(triangle.getA(), x1, y1, z1);  // vertex 822
+            triangle.getVertexCoordinates(triangle.getB(), x2, y2, z2);  // vertex 441
+            triangle.getVertexCoordinates(triangle.getC(), x3, y3, z3);  // vertex 842
+            
+            constexpr auto max_precision{std::numeric_limits<long double>::digits10 + 1};
+
+            std::cout << "Triangle vertices:" << std::endl;
+            std::cout << std::setprecision(max_precision) << "Vertex " << triangle.getA() << ": (" << x1 << ", " << y1 << ", " << z1 << ")" << std::endl;
+            std::cout << std::setprecision(max_precision) << "Vertex " << triangle.getB() << ": (" << x2 << ", " << y2 << ", " << z2 << ")" << std::endl;
+            std::cout << std::setprecision(max_precision) << "Vertex " << triangle.getC() << ": (" << x3 << ", " << y3 << ", " << z3 << ")" << std::endl;
+            std::cout << "------------------------" << std::endl;
+            ctr ++;
+            if (ctr == 3) break;
+        }
 
         // Example: integrate x*y over each face using Gauss-3 quadrature
         std::vector<QuadraturePoint> quadPoints = Quadrature::getGauss4Points();
