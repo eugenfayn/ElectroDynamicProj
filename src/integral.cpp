@@ -123,13 +123,15 @@ void BuildRightPart(std::complex<double>* &f, const int N, const Triangle* &tria
 }
 
 void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
-    std::complex<double>* A_1d = new std::complex<double>[N * N];
+    std::complex<double> *A_1d = new std::complex<double>[N * N];
+    std::complex<double> *A_copy = new std::complex<double>[N * N];
     std::complex<double> *b_copy = (std::complex<double>*)malloc(N * sizeof(std::complex<double>));
 
     // Copy elements from 2D to 1D
     for(int i = 0; i < N; i++) {
         for(int j = 0; j < N; j++) {
             A_1d[i * N + j] = A[j][i];
+            A_copy[i * N + j] = A[j][i];
         }
     }
 
@@ -164,6 +166,10 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
     int *Ipvt = (int*)malloc(N * sizeof(N));
     int info;
     LAPACK_zgesv(&N, &Nrhs, A_casted, &N, Ipvt, B_casted, &N, &info);
+    if (info != 0) {
+        std::cout << "LAPACK solver failed with error code: " << info << std::endl;
+        // Handle error
+    }
 
     double error = 0.0;
     // Compare
@@ -171,7 +177,7 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
     for (int i = 0; i < N; ++i) {
             rhs[i] = std::complex<double>(0.0,0.0);
             for (int j = 0; j < N; ++j) {
-                    rhs[i] += A_1d[j * N + i] * b[j];
+                    rhs[i] += A_copy[j * N + i] * b[j];
             }
             error += abs(b_copy[i] - rhs[i]);
         }
@@ -186,4 +192,16 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
 
     printf("error %.20f", error);
     printf("\n\n");
+
+    // double relative_error = 0.0;
+    // double norm_b = 0.0;
+    // for(int i = 0; i < N; i++) {
+    //     std::complex<double> sum(0.0, 0.0);
+    //     for(int j = 0; j < N; j++) {
+    //         sum += A[i][j] * b[j];
+    //     }
+    //     relative_error += std::abs(sum - b_copy[i]);
+    //     norm_b += std::abs(b_copy[i]);
+    // }
+    // std::cout << "Relative error: " << relative_error/norm_b << std::endl;
 }
