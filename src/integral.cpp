@@ -42,24 +42,27 @@ std::complex<double> FindI_Aij(Triangle sigmaX,Triangle sigmaY,Vertex Cx, Vertex
 // NxN - размер матриц
 // Чекнуть нумерацию рёбер с нуля или нет. В Edge начинается с нуля
 // triangles - массив треугольников
-void BuildMatrix(std::complex<double>** &A, int N, int b, Triangle* &trinagles){
+void BuildMatrix(std::complex<double>** &A, int N, int b, Triangle* &triangles){
     // Идём по I,J.
     // В случае если I,J равны 0    
     double coef = 0.0;
     for (int i=0; i < N; i++){
-        for (int j=0; j < N; j++){
+        for (int j=0; j < N + 1; j++){
             std::complex<double> sum_(0.0,0.0);
             // p=1,q=1
-            coef = 1 / (4 * M_PI );
+            coef = 1 / (4 * M_PI * triangles[2 * i].calcSquare() * triangles[j].calcSquare());
             sum_ += 0;
             // p=1,q=2
+            coef = - 1 / (4 * M_PI * triangles[i].calcSquare() * triangles[j + 1].calcSquare());
             sum_ += 0;
             // p=2,q=1
+            coef = - 1 / (4 * M_PI * triangles[i + 1].calcSquare() * triangles[j].calcSquare());
             sum_ += 0;
             // p=2,q=2
+            coef = 1 / (4 * M_PI * triangles[i + 1].calcSquare() * triangles[j + 1].calcSquare());
             sum_ += 0;
             // Записываем результат в A_ij
-            A[i][j] = sum_;
+            A[i - 1][j - 1] = sum_;
         }
     }
 }
