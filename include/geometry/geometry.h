@@ -30,11 +30,6 @@ public:
     double distance(const Vertex& other) const;
 };
 
-class Triangle {
-public:
-    Vertex a,b,c;
-    double calcSquare() const;
-};
 class Face {
 public:
     int v1, v2, v3;
@@ -60,7 +55,7 @@ public:
     int getA() const;
     int getB() const;
     int getC() const;
-    
+    double calcSquare();  
     void getVertexCoordinates(int vertex, double& x, double& y, double& z) const;
 };
 

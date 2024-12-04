@@ -50,17 +50,17 @@ void BuildMatrix(std::complex<double>** &A, int N, int b, Triangle* &triangles){
         for (int j=0; j < N + 1; j++){
             std::complex<double> sum_(0.0,0.0);
             // p=1,q=1
-            coef = 1 / (4 * M_PI * triangles[2 * i].calcSquare() * triangles[j].calcSquare());
-            sum_ += 0;
+            coef = 1 / (4 * M_PI * triangles[2 * i].calcSquare() * triangles[2 * j].calcSquare());
+            sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j], triangles[2 * i].c , triangles[2 * j].c);
             // p=1,q=2
-            coef = - 1 / (4 * M_PI * triangles[i].calcSquare() * triangles[j + 1].calcSquare());
-            sum_ += 0;
+            coef = - 1 / (4 * M_PI * triangles[2 * i].calcSquare() * triangles[2 * j + 1].calcSquare());
+            sum_ += coef * FindI_Aij(triangles[2 * i],triangles[2 * j +1], triangles[2 * i].c , triangles[2 * j + 1].c);
             // p=2,q=1
-            coef = - 1 / (4 * M_PI * triangles[i + 1].calcSquare() * triangles[j].calcSquare());
-            sum_ += 0;
+            coef = - 1 / (4 * M_PI * triangles[2 * i + 1].calcSquare() * triangles[2 * j].calcSquare());
+            sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j], triangles[2 * i + 1].c , triangles[2 * j].c);
             // p=2,q=2
-            coef = 1 / (4 * M_PI * triangles[i + 1].calcSquare() * triangles[j + 1].calcSquare());
-            sum_ += 0;
+            coef = 1 / (4 * M_PI * triangles[2 * i + 1].calcSquare() * triangles[2 * j + 1].calcSquare());
+            sum_ += coef * FindI_Aij(triangles[2 * i + 1],triangles[2 * j + 1], triangles[2 * i + 1].c , triangles[2 * j + 1].c);
             // Записываем результат в A_ij
             A[i - 1][j - 1] = sum_;
         }
