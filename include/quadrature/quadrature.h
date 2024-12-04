@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include "geometry/geometry.h"
+#include "math.h"
 
 struct QuadraturePoint {
     double xi;     // ξ coordinate

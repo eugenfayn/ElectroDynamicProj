@@ -4,6 +4,13 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <fstream>
+#include <sstream>
+#include <map>
+#include <array>
 
 class Vertex {
 public:
@@ -36,6 +43,29 @@ public:
     Face(int v1, int v2, int v3);
     bool operator==(const Face& other) const;
 };
+
+class Triangle {
+private:
+    int a;  // first vertex of the shared edge
+    int b;  // second vertex of the shared edge
+    int c;  // vertex not on the shared edge
+    std::array<std::array<double, 3>, 3> vertices;  // stores x,y,z coordinates for each vertex
+
+public:
+    Triangle();  // default constructor
+    Triangle(int a_, int b_, int c_, 
+            const double* v1, const double* v2, const double* v3);
+    
+    // Getters
+    int getA() const;
+    int getB() const;
+    int getC() const;
+    
+    void getVertexCoordinates(int vertex, double& x, double& y, double& z) const;
+};
+
+// Function declaration for parsing shared edges
+std::vector<Triangle> parseSharedEdges(const std::string& filename);
 
 class Edge {
 public:
