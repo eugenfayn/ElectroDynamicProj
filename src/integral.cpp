@@ -2,6 +2,7 @@
 #include <complex.h>
 #include "geometry/geometry.h"
 #include "quadrature/quadrature.h"
+#include "cmath"
 
 // Добавить волновое число правильное
 std::complex<double> calcF_Aij(Vertex Xk, Vertex Ym, Vertex Cx, Vertex Cy, double wavenumber=1){
@@ -38,21 +39,24 @@ std::complex<double> FindI_Aij(Triangle sigmaX,Triangle sigmaY,Vertex Cx, Vertex
 };
 
 // A - COMPLEX матрица, куда будут записаны коэффициенты A_ij
-// NxN - размер матрицы
+// NxN - размер матриц
 // Чекнуть нумерацию рёбер с нуля или нет. В Edge начинается с нуля
-void BuildMatrix(std::complex<double>** &A, int N, int b){
+// triangles - массив треугольников
+void BuildMatrix(std::complex<double>** &A, int N, int b, Triangle* &trinagles){
     // Идём по I,J.
     // В случае если I,J равны 0    
+    double coef = 0.0;
     for (int i=0; i < N; i++){
         for (int j=0; j < N; j++){
             std::complex<double> sum_(0.0,0.0);
-            // sigmaI- sigmaJ-
+            // p=1,q=1
+            coef = 1 / (4 * M_PI );
             sum_ += 0;
-            // sigmaI- sigmaJ+
+            // p=1,q=2
             sum_ += 0;
-            // sigmaI+ sigmaJ-
+            // p=2,q=1
             sum_ += 0;
-            // sigmaI+ sigmaJ+
+            // p=2,q=2
             sum_ += 0;
             // Записываем результат в A_ij
             A[i][j] = sum_;
