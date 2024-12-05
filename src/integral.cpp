@@ -28,6 +28,38 @@ namespace {
     }
 }
 
+
+void calcPovTok(Vertex &j, const int N, Triangle* &triangles, std::complex<double>* ves){
+    Triangle currentTriangle;
+    Vertex C;
+    Vertex Xm;
+    double wK[4]{-9./16, 25./48, 25./48, 25./48};
+    double ksi4[4]{1./3, 3./5, 1./5, 1./5};
+    double eta4[4]{1./3, 1./5, 3./5, 1./5};
+    Vertex e_minus;
+    Vertex e_plus;
+    for (int i=0; i<N; i++){
+        e_minus = Vertex(0,0,0,0);
+        e_plus = Vertex(0,0,0,0);
+        currentTriangle = triangles[2 * i];
+        C = currentTriangle.getC();
+        for (int m=0; m<4;m++){
+            // p = 1, tri-
+            Xm = currentTriangle.getA() * ksi4[m]+ currentTriangle.getB() *  eta4[m] +  currentTriangle.getC() * (1 - ksi4[m] - eta4[m]);
+            e_minus = e_minus + (Xm - C)/currentTriangle.calc_S();
+        }
+        j = j + e_minus * ves[i];
+        currentTriangle = triangles[2 * i + 1];
+        C = currentTriangle.getC();
+        for (int m=0; m<4;m++){
+            // p = 2, tri+
+            Xm = currentTriangle.getA() * ksi4[m]+ currentTriangle.getB() *  eta4[m] +  currentTriangle.getC() * (1 - ksi4[m] - eta4[m]);
+            e_plus = e_plus + (C - Xm)/currentTriangle.calc_S();
+        }
+        j = j + e_plus * ves[i];
+    }
+}
+
 // Generate random float number
 double randomFloat() {
     static std::random_device rd;
@@ -235,7 +267,7 @@ void SolveSLE(std::complex<double>** &A, const int N, std::complex<double>* &b){
 // g - вектр b из SolveSLE  
 // N - размер вектора
 // triangles - массив треугольников
-double calcEPR(Vertex tau, /*std::complex<double>* &g,*/ const int N, const Triangle* &triangles,  double wavenumber=WAVENUMBER){
+double calcEPR(Vertex tau, Vertex Gm, const int N, const Triangle* &triangles,  double wavenumber=WAVENUMBER){
     double wK[4]{-9./16, 25./48, 25./48, 25./48};
     double ksi4[4]{1./3, 3./5, 1./5, 1./5};
     double eta4[4]{1./3, 1./5, 3./5, 1./5};
