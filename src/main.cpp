@@ -1,12 +1,14 @@
 #include "geometry/geometry.h"
 #include "quadrature/quadrature.h"
 #include "integral.cpp"
+#include "geometry.cpp"
 #include "config.h"
 #include <iostream>
 #include <string>
 #include <filesystem>
 #include <chrono>
 #include <complex>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -39,8 +41,10 @@ int main() {
         fs::create_directories(PROJECT_OUTPUT_DIR);
 
         // Get file paths
-        fs::path inputFile = getInputPath("angle_20x20.obj");
+        fs::path inputFile = getInputPath("cyl_4k.obj");
         fs::path outputFile = getOutputPath("shared_edges.txt");
+
+        initializeGeometryType(inputFile);
 
         // Check if input file exists
         if (!fs::exists(inputFile)) {
@@ -138,6 +142,7 @@ int main() {
         std::cout << "Processing completed successfully." << std::endl;
         std::cout << "Output written to: " << outputFile << std::endl;
 
+
         std::cout << "Start BUILD MATRIX" << std::endl;
     
         // Calculate N (number of shared edges)
@@ -153,6 +158,7 @@ int main() {
 
         // Build the matrix using triangles.data()
         const Triangle* trianglesPtr = triangles.data();
+        // analyzeTriangleMesh(trianglesPtr, N); not working
         BuildMatrix(A, N, trianglesPtr);
 
         // Optional: Print first few elements of matrix to verify
@@ -165,11 +171,35 @@ int main() {
             std::cout << std::endl;
         }
 
+        std::complex<double>* b = new std::complex<double>[N];
+        // Initialize all elements to 0+0i (optional)
+        for(int i = 0; i < N; i++) {
+            b[i] = std::complex<double>(0.0, 0.0);
+        }
+
+        const Vertex polarization(0.0, 1.0, 0.0, -1);
+        const Vertex tension(-1.0, 0.0, 0.0, -2);
+
+        BuildRightPart(b, N, trianglesPtr, polarization, tension);
+
+        SolveSLE(A, N, b);
+
+        outputFile = getOutputPath("res.txt");
+        std::ofstream outFile(outputFile.string());
+        for (double alpha = 0; alpha <=180; alpha+=10){
+            Vertex tau = buildVectorTau(tension, polarization, alpha);
+            double epr = calcEPR(tau, /*b,*/ N, trianglesPtr);
+            outFile << alpha << " " << epr << "\n";
+        }
+        outFile.close();
+
         // Clean up
         for(int i = 0; i < N; i++) {
             delete[] A[i];
         }
         delete[] A;
+
+        delete[] b;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
