@@ -1,10 +1,12 @@
 #include "geometry/geometry.h"
 #include "quadrature/quadrature.h"
+#include "integral.cpp"
 #include "config.h"
 #include <iostream>
 #include <string>
 #include <filesystem>
 #include <chrono>
+#include <complex>
 
 namespace fs = std::filesystem;
 
@@ -26,6 +28,7 @@ int main() {
     std::vector<Vertex> vertices;
     std::vector<Face> faces;
     std::vector<Triangle> triangles;
+    std::unordered_map<Edge, std::vector<int>, EdgeHash> edgeMap;
     
     // Set the seed for the random number generator
     srand(time(NULL));
@@ -52,7 +55,7 @@ int main() {
         std::cout << "Number of faces: " << faces.size() << std::endl;
         
         // Process edges
-        auto edgeMap = findEdges(faces);
+        edgeMap = findEdges(faces);
         
         // Print information
         printGeometryInfo(vertices, faces, edgeMap);
@@ -84,7 +87,7 @@ int main() {
                     << triangle.getC().z << ")" << std::endl;
             std::cout << "------------------------" << std::endl;
             ctr ++;
-            if (ctr == 3) break;
+            if (ctr == 6) break;
         }
     
         // Example: integrate x*y over each face using Gauss-3 quadrature
@@ -134,6 +137,39 @@ int main() {
         
         std::cout << "Processing completed successfully." << std::endl;
         std::cout << "Output written to: " << outputFile << std::endl;
+
+        std::cout << "Start BUILD MATRIX" << std::endl;
+    
+        // Calculate N (number of shared edges)
+        int N = triangles.size() / 2;
+        std::cout << "Matrix size: " << N << "x" << N << std::endl;
+        std::cout << "Triangles size: " << triangles.size() << std::endl;
+        
+        // Allocate memory for the matrix
+        std::complex<double>** A = new std::complex<double>*[N];
+        for(int i = 0; i < N; i++) {
+            A[i] = new std::complex<double>[N + 1];
+        }
+
+        // Build the matrix using triangles.data()
+        const Triangle* trianglesPtr = triangles.data();
+        BuildMatrix(A, N, trianglesPtr);
+
+        // Optional: Print first few elements of matrix to verify
+        std::cout << "First few elements of matrix:" << std::endl;
+        for(int i = 0; i < std::min(3, N); i++) {
+            for(int j = 0; j < std::min(3, N+1); j++) {
+                std::cout << "A[" << i << "][" << j << "] = " 
+                        << A[i][j].real() << " + " << A[i][j].imag() << "i\t";
+            }
+            std::cout << std::endl;
+        }
+
+        // Clean up
+        for(int i = 0; i < N; i++) {
+            delete[] A[i];
+        }
+        delete[] A;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -142,6 +178,6 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Execution time: " << duration.count() / 1000.0 << " seconds" << std::endl;
-    
+
     return 0;
 }
