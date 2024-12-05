@@ -238,7 +238,7 @@ double calcEPR(Vertex tau, /*std::complex<double>* &g,*/ const int N, const Tria
     double sum_ = 0;
     for (int i=0; i < 2*N; i++){
         for (int m=0; m < 4 ; m++){
-                Vertex Gm(1.0, 1.0, 1.0, -1);//я хз как его считать
+                Vertex Gm(1.0, 1.0, 1.0, -1);//я хз как его считать 
                 Triangle currentTriangle = triangles[i];
                 Vertex Xm = currentTriangle.getA() * ksi4[m]+ currentTriangle.getB() *  eta4[m] +  currentTriangle.getC() * (1 - ksi4[m] - eta4[m]) ; 
                 double Si = currentTriangle.calc_S();
